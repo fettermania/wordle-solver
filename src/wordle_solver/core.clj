@@ -1,15 +1,23 @@
+; (use 'wordle-solver.core :reload)
+
 (ns wordle-solver.core
   (:gen-class))
+
+(require '[clojure.string :as str])
+(require '[clojure.set])
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
   (println "Hello, World!"))
 
-(require '[clojure.string :as str])
-(require '[clojure.set])
-(def filename "/Users/fettermania/Desktop/wordle/sowpods-5.txt")
-(def dict (str/split (slurp filename) #"\n"))
+
+(def answers-filename "wordle-answers.txt")
+(def allowed-guesses-filename "wordle-allowed-guesses.txt")
+
+(def answers-dict (str/split (slurp answers-filename) #"\n"))
+(def allowed-guesses-dict (str/split (slurp allowed-guesses-filename) #"\n"))
+
 ;; Note: doesn't check lengths
 (defn match? [mask word]
   (every?
@@ -45,7 +53,7 @@
 ;;   includes S
 
 
-(defn get-filtered-list [s-letters]
+(defn get-filtered-list [s-letters dict]
   (println "CALLING WITH" s-letters)    
   (if (= 1 (count s-letters))
     (filter #(str/includes? % (first s-letters)) dict)
@@ -72,7 +80,7 @@
 
 ; TODO identity vs. memoize  
 ; TOOD Assumes dict as global - need to reset if changing at next move
-(def filter-dict
+(defn filter-dict [dict]
   ( #_memoize identity
    (fn [set-letters]
      (print ".")
@@ -101,7 +109,7 @@
 
 
 ;; TODO : Pre-generate all filtered sets of letters
-(defn eliminators [w_guess]
+(defn eliminators [w_guess dict]
   (zipmap dict (map (partial count-remaining dict w_guess) dict)))
 
 ; (defn 
