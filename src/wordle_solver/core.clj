@@ -13,7 +13,7 @@
 
 
 ;; Answers: w_a = 2315
-;; Guesses: w_g = 10657
+;; Guesses: w_g = 12972
 
 ;; LOAD 
 (def answers-filename "wordle-answers.txt")
@@ -97,25 +97,76 @@
 
 (defn evaluate-move [all-mask-lists dict-answers w-word]
   (let [matching-words (map
-                        #((filter-fn-from-mask-list-and-word w-word %) dict-answers)
+                        #((filter-fn-from-mask-list-and-word w-word %)
+                          dict-answers)
                         all-mask-lists)
         n-entropy (apply +
                       (map (partial calculate-entropy (count dict-answers))
                        matching-words))
         ]
-    (list n-entropy matching-words)))
+    {:entropy n-entropy
+     :matches (zipmap all-mask-lists matching-words)}))
 
+;; sorted list of:
+;; ["aahed"
+;;  {:entropy 7.7831832073653135,
+;;   :matches
+;;   {(2 0 2 2 0) ("ashen"),
+;;     (2 0 2 0 0) ("abhor"),
+;;    (1 2 0 2 1) ("cadet" "laden"),
 (defn evaluate-all-moves [dict-answers dict-allowed-guesses]
   (let [all-mask-lists (generate-all-mask-lists 5)
-        results (map list
+        results (zipmap
                  dict-allowed-guesses
                  (map (partial evaluate-move all-mask-lists dict-answers)
                       dict-allowed-guesses))
-        sorted-results (sort #(< (first (second %1)) (first (second %2))) results)
-        ]
-;    results
-    sorted-results
-    ))
+        sorted-results (sort
+                        #(< (:entropy (second %1)) (:entropy (second %2)))
+                        results)]
+    sorted-results))
+
+;; ["soare"
+;;  {:entropy 5.281333128027922,
+;;   :matches
+;;   {(2 0 2 2 0)
+;;    ("scarf"
+;;     "scary"
+;;     "shard"
+;;     "shark"
+;;     "sharp"
+;;     "smart"
+;;     "snarl"
+;;     "spark"
+;;     "stark"
+;;     "start"
+   ;;     "swarm"),
+
+;; returns dict-answers
+(defn play-move [dict-answers dict-allowed-guesses r-evals str-word l-mask]
+  (let [entry (extract-row-from-results r-evals str-word)] 
+    (if (nil? entry) nil
+        (-> entry first second :matches (get l-mask)))))
+
+(defn extract-row-from-results [r str-word]
+  (filter #(= str-word (first %)) r))
 
 (defn just-words-and-entropy [evaluations]
   (map #(list (first %) (first (second %))) evaluations))
+
+; (clojure.pprint/pprint *map* (clojure.java.io/writer "foo.txt"))
+
+;;(pprint (take 10 (just-words-and-entropy r-evals)))
+;;(play-move dict-answers dict-allowed-guesses r-evals "raise" '(1 2 2 0 0))
+;;(def dict-answers *1)
+;;(evaluate-all-moves dict-answers dict-allowed-guesses)
+;;(def r-evals *1)
+
+
+;;(pprint (extract-row-from-results r-evals "cairn"))
+
+
+;; NOTE Bug
+;; DACHA vs. HAIRY
+;; 0 2 0 1 1 = [^DC]A[^DC][^HDC] includes A, H
+;; -> 0 2 0 1 0 = [^DCA]A[^DCA][^HDCA][^DCA] includes H
+;; BUT both are selected
