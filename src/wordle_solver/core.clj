@@ -22,7 +22,7 @@
 (def dict-answers (str/split (slurp answers-filename) #"\n"))
 (def dict-allowed-guesses (str/split (slurp allowed-guesses-filename) #"\n"))
 
-
+G
 ;; MASKS
 (def BLACK 0)
 (def YELLOW 1)
@@ -142,31 +142,34 @@
    ;;     "swarm"),
 
 ;; returns dict-answers
-(defn play-move [dict-answers dict-allowed-guesses r-evals str-word l-mask]
-  (let [entry (extract-row-from-results r-evals str-word)] 
-    (if (nil? entry) nil
-        (-> entry first second :matches (get l-mask)))))
-
 (defn extract-row-from-results [r str-word]
   (filter #(= str-word (first %)) r))
 
 (defn just-words-and-entropy [evaluations]
   (map #(list (first %) (first (second %))) evaluations))
 
-; (clojure.pprint/pprint *map* (clojure.java.io/writer "foo.txt"))
+(defn play-move [dict-answers dict-allowed-guesses r-evals str-word l-mask]
+  (let [entry (extract-row-from-results r-evals str-word)] 
+    (if (nil? entry) nil
+        (-> entry first second :matches (get l-mask)))))
 
-;;(pprint (take 10 (just-words-and-entropy r-evals)))
-;;(play-move dict-answers dict-allowed-guesses r-evals "raise" '(1 2 2 0 0))
-;;(def dict-answers *1)
-;;(evaluate-all-moves dict-answers dict-allowed-guesses)
-;;(def r-evals *1)
 
+
+#_(do
+  (evaluate-all-moves dict-answers dict-allowed-guesses)
+  (def r-evals *1)
+  (pprint (take 10 (just-words-and-entropy r-evals)))
+  (play-move dict-answers dict-allowed-guesses r-evals "raise" '(1 2 2 0 0))
+  (def dict-answers *1)
+)
 
 ;;(pprint (extract-row-from-results r-evals "cairn"))
+; (clojure.pprint/pprint *map* (clojure.java.io/writer "foo.txt"))
 
 
-;; NOTE Bug
+;; NOTE A bug still exists
 ;; DACHA vs. HAIRY
 ;; 0 2 0 1 1 = [^DC]A[^DC][^HDC] includes A, H
-;; -> 0 2 0 1 0 = [^DCA]A[^DCA][^HDCA][^DCA] includes H
-;; BUT both are selected
+;; (correct one) -> 0 2 0 1 0 = [^DCA]A[^DCA][^HDCA][^DCA] includes H
+;; but hairy will show up in both sets as "matching" 
+
