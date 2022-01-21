@@ -22,7 +22,7 @@
 (def dict-answers (str/split (slurp answers-filename) #"\n"))
 (def dict-allowed-guesses (str/split (slurp allowed-guesses-filename) #"\n"))
 
-G
+
 ;; MASKS
 (def BLACK 0)
 (def YELLOW 1)
@@ -87,22 +87,24 @@ G
 (def fn-d (partial filter #(str/includes? % "D")))
 (def fn-reg1 #(filter (fn [w] (re-matches #"[^ER][^ER]A[^S]E" w)) %))
 
-(defn calculate-entropy [count-dict result-set]
+(defn calculate-entropy-numerator [result-set]
   (let [c (count result-set)]
     (cond (= 0 c) 0
-          (= 1 c) (/ (- c) count-dict)
-        :else  (/ (* (Math/log c) c)
-                  (Math/log 2) ; NOTE not strictly necessary
-                  count-dict))))
+          (= 1 c) (- c)
+          :else  (/ (* (Math/log c) c) (Math/log 2)))))
 
 (defn evaluate-move [all-mask-lists dict-answers w-word]
   (let [matching-words (map
                         #((filter-fn-from-mask-list-and-word w-word %)
-                          dict-answers)
-                        all-mask-lists)
-        n-entropy (apply +
-                      (map (partial calculate-entropy (count dict-answers))
-                       matching-words))
+                          dict-answers) all-mask-lists)
+        ;; Klugey fix here.  Total words should always be dict-answers
+        ;; but some patterns overlap so words are doubled.
+        ;; This at least fixes the denominator
+        total-words (apply + (map count matching-words))
+        n-entropy-numerator (apply +
+                                   (map calculate-entropy-numerator
+                                        matching-words))
+        n-entropy (/ n-entropy-numerator total-words)
         ]
     {:entropy n-entropy
      :matches (zipmap all-mask-lists matching-words)}))
@@ -156,11 +158,22 @@ G
 
 
 #_(do
-  (evaluate-all-moves dict-answers dict-allowed-guesses)
+(def l-answers dict-answers)
+(def l-allowed-guesses dict-allowed-guesses)
+)
+
+#_(do
+  (evaluate-all-moves l-answers l-allowed-guesses)
   (def r-evals *1)
   (pprint (take 10 (just-words-and-entropy r-evals)))
-  (play-move dict-answers dict-allowed-guesses r-evals "raise" '(1 2 2 0 0))
-  (def dict-answers *1)
+
+  
+  (def w-word "outed")
+  (def response-mask '(1 0 0 1 0))
+
+  (play-move l-answers l-allowed-guesses r-evals w-word response-mask)
+  (def l-answers *1)
+  
 )
 
 ;;(pprint (extract-row-from-results r-evals "cairn"))
