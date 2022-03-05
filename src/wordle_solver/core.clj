@@ -1,19 +1,10 @@
-; (use 'wordle-solver.core :reload)
+; (use 'wordle-solver.core :reload) ;; LAZY RELOAD
 
 (ns wordle-solver.core
   (:gen-class))
 
 (require '[clojure.string :as str])
 (require '[clojure.set])
-
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (println "Hello, World!"))
-
-
-;; Answers: w_a = 2315
-;; Guesses: w_g = 12972
 
 ;; LOAD 
 (def answers-filename "wordle-answers.txt")
@@ -28,8 +19,6 @@
 (def YELLOW 1)
 (def GREEN 2)
 
-(def w-word "aback")
-(def seq-chars (seq w-word))
 (def mask-list (list BLACK YELLOW GREEN YELLOW BLACK))
 
 ; returns () or (\a \d \d) etc.
@@ -64,7 +53,6 @@
         (= mask-elt YELLOW) (apply str "[^" black-list word-elt "]")
         :else   (apply str "[^" black-list "]")))
 
-;; TODO START HERE - not a list?/
 (defn filter-fn-from-mask-list-and-word [w-word mask-list]
   (let [seq-word (seq w-word)
         black-list (apply-mask-to-word mask-list seq-word BLACK)
@@ -76,12 +64,9 @@
         filter-regex (partial filter #(re-matches (re-pattern regex-str) %))
         filter-includes (gen-includer-filters yellow-list)
         ]
-;        [regex-str yellow-list]
         (comp filter-regex filter-includes)
         ))
         
-
-;  (map #((filter-fn-from-mask-list-and-word w-word %) dict-answers) all-mask-lists)
 
 
 (def fn-d (partial filter #(str/includes? % "D")))
@@ -127,22 +112,6 @@
                         results)]
     sorted-results))
 
-;; ["soare"
-;;  {:entropy 5.281333128027922,
-;;   :matches
-;;   {(2 0 2 2 0)
-;;    ("scarf"
-;;     "scary"
-;;     "shard"
-;;     "shark"
-;;     "sharp"
-;;     "smart"
-;;     "snarl"
-;;     "spark"
-;;     "stark"
-;;     "start"
-   ;;     "swarm"),
-
 ;; returns dict-answers
 (defn extract-row-from-results [r str-word]
   (filter #(= str-word (first %)) r))
@@ -156,124 +125,50 @@
         (-> entry first second :matches (get l-mask)))))
 
 
-
-#_(do
-(def l-answers dict-answers)
-(def l-allowed-guesses dict-allowed-guesses)
-(def r-top   (evaluate-all-moves l-answers l-allowed-guesses))
-(def r-evals r-top)
-)
-
-#_(do
-    
-    ;; NOTE: In Hard mode, l-allowed-guesses are CLOSE to l-answers
-    ;; There are also "black-disqualified answers" that
-    ;; are still legal moves
-;    (def l-allowed-guesses l-answers)
-  (evaluate-all-moves l-answers l-allowed-guesses)
-  (def r-evals *1)
-  (pprint (take 10 (just-words-and-entropy r-evals)))
-
-  (def viable-answer-words  (filter #(get (set l-answers) (first %))
+(defn viable-answer-words [l-answers r-evals] (filter #(get (set l-answers) (first %))
                                     (just-words-and-entropy r-evals)))
-  (pprint (take 10 viable-answer-words))
-  
-  (def w-word "court")
-  (def response-mask '(0 2 2 2 0))
-  (play-move l-answers l-allowed-guesses r-evals w-word response-mask)
-  (def l-answers *1)
-  
-)
 
-;; (pprint (take 10 (just-words-and-entropy r-evals)))
-;;(pprint (extract-row-from-results r-evals "cairn"))
-; (clojure.pprint/pprint *map* (clojure.java.io/writer "foo.txt"))
-
-
-;; NOTE A bug still exists
-;; DACHA vs. HAIRY
-;; 0 2 0 1 1 = [^DC]A[^DC][^HDC] includes A, H
-;; (correct one) -> 0 2 0 1 0 = [^DCA]A[^DCA][^HDCA][^DCA] includes H
-;; but hairy will show up in both sets as "matching" 
-
-;; TODO Another bug - an answer set with one option makes everything -1 (b/c you know the answer!)
-
-;; TODO Evaluate all moves - include "
-
-;; TODO Did the word list change to exclude SORAE on 1/27?
-
-;; TODO Filter results to include hard-mode-acceptable words
-;;  (pprint (take 20
-;;  (filter #(-> % first seq second (= \o))
-;; (just-words-and-entropy r-evals))))
-;; (filter #(get (set l-answers) (first %)) (just-words-and-entropy r-evals))
-
+(defn intersect-blocks [a b]
+   (into '()  (clojure.set/intersection (set a) (set b))))
 
 (defn drop-nth-from-seq [n seq-w]
   (concat
     (take n seq-w)
     (drop (inc n) seq-w)))
 
-#_(do 
-(def viable-answers (filter #(-> % first seq second (= \o))
-                            (filter #(get (set l-answers) (first %))
-                                    (just-words-and-entropy r-evals))))
 
-(def viable-guesses-all (filter #(-> % first seq second (= \o))
-                                    (just-words-and-entropy r-evals)))
-
-(def viable-answer-words  (filter #(get (set l-answers) (first %))
-                                    (just-words-and-entropy r-evals)))
-
-
-                                        ; What words have five or more common endings?
-
-;; TODO
 (defn select-from-word [indices w]
   (let [s (seq w)]
   (map #(nth s %) indices)))
 
+
+(defn select-similar-block [l-greens min-ct l-answers] 
+ (mapcat 
+ 		second
+ 		(filter
+ 			  (fn [[k v]] (>= (count v) min-ct))
+ 			   	(group-by (partial select-from-word '(2 4)) dict-answers))))
+
+;; USAGE
+
 #_(do
-(def endings-map (group-by rest dict-answers))
-(def starters-map (group-by (partial take 4) dict-answers))
+	;; DO ONCE ON INIT
+		(def l-answers dict-answers)
+		(def l-allowed-guesses dict-allowed-guesses)
+		(def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes 10-15 minutes.
+		(def r-evals r-top)
 
-(def dict-answers  (into '()  (clojure.set/intersection (set three-or-more-ender-words) (set two-or-more-starter-words))))
+		;; FOR ANY GIVEN STEP
+  (evaluate-all-moves l-answers l-allowed-guesses)
+  (def r-evals *1)
+  (pprint (take 10 (just-words-and-entropy r-evals)))
+
+  (pprint (take 10 (viable-answer-words l-answers r-evals)))
+
+  ;; MAKE YOUR CHOICE
+	  (def w-word "cleat")
+	  (def response-mask '(0 0 2 2 0))
+	  (play-move l-answers l-allowed-guesses r-evals w-word response-mask)
+	  (def l-answers *1)
+	  
 )
-
-(def block-24
-(mapcat
- second
- (filter
-  (fn [[k v]] (> (count v) 3))
-  (group-by (partial select-from-word '(2 4)) dict-answers))))
-
-(def block-014
-(mapcat
- second
- (filter
-  (fn [[k v]] (> (count v) 1))
-  (group-by (partial select-from-word '(0 1 4)) dict-answers))))
-
-(def block-124
-(mapcat
- second
- (filter
-  (fn [[k v]] (> (count v) 1))
-  (group-by (partial select-from-word '(1 2 4)) dict-answers))))
-
-(def l-answers-2-24 (into '() (clojure.set/intersection (set block-012) (set block-014) (set block-124))))
-
-    
-#_(do
-    (def gbggg-words
-      (mapcat second
-(filter (fn [[k v]] (> (count v) 2)) (group-by #(drop-nth-from-seq 1 (seq %)) dict-answers)))
-   ))
-  (def l-answers gbggg-words)
-)
-
-;; ("skill" "spill" "swill" "silly" "sully")
-;;(zipmap (map first viable-answer-words)
-  ;;      (map (partial extract-row-from-results r-evals) (map first viable-answer-words)))
-
-;; Another TODO - serialize and unserliaze (perhaps removing empties?
