@@ -96,8 +96,8 @@
 
 ;; sorted list of:
 ;; ["aahed"
-;;  {:entropy 7.7831832073653135,
-;;   :matches
+;;  {:entropy 7.78318320736531353,
+;;   :MATCHES
 ;;   {(2 0 2 2 0) ("ashen"),
 ;;     (2 0 2 0 0) ("abhor"),
 ;;    (1 2 0 2 1) ("cadet" "laden"),
@@ -144,10 +144,19 @@
 
 (defn select-similar-block [l-greens min-ct l-answers] 
  (mapcat 
- 		second
- 		(filter
- 			  (fn [[k v]] (>= (count v) min-ct))
- 			   	(group-by (partial select-from-word '(2 4)) dict-answers))))
+   second
+   (filter
+     (fn [[k v]] (>= (count v) min-ct))
+       (group-by (partial select-from-word l-greens)
+     dict-answers))))
+
+(defn select-anagrams [l-answers] 
+ (mapcat 
+   second
+   (filter
+     (fn [[k v]] (>= (count v) 2))
+       (group-by (comp seq sort)
+                 dict-answers))))
 
 ;; USAGE
 
