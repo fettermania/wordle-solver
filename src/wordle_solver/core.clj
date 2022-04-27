@@ -25,9 +25,6 @@
 (def YELLOW 1)
 (def GREEN 2)
 
-; DEMO CODE 
-;(def mask-list (list BLACK YELLOW GREEN YELLOW BLACK))
-
 ; returns () or (\a \d \d) etc.
 (defn apply-mask-to-word [mask-list seq-word val]
   (filter identity (map #(if (= val %1) %2) mask-list seq-word)))
@@ -75,18 +72,20 @@
         regex-str (apply str
                          (map (partial _generate-regex-entry (apply str black-list))
                               mask-list w-word))
-        _ (println "Regex str for " w-word ", mask " (str mask-list) ": " regex-str)
+       ; _ (println "Regex str for " w-word ", mask " (str mask-list) ": " regex-str)
         filter-regex (partial filter #(re-matches (re-pattern regex-str) %))
         filter-includes (gen-includer-filters yellow-list)
         ]
-        (comp filter-regex filter-includes)
+        (comp filter-regex filter-includes) ;; TODO Put new thing in here.
+;; TODO NOTE:
+;; wordle-solver.core=> (def operations [inc inc inc])
+;; #'wordle-solver.core/operations
+;; wordle-solver.core=> ((apply comp operations) 1)
+;; 4
+
         ))
 
 ;; TODO NEW ZONE  
- ; (defn new-filter-fn-from-mask-list-and-word [w-word mask-list]
- ;   (map-indexed (fn [idx item] [item idx]) (map list w-word mask-list)  
- ; ))
-
 
 ;  (color-seqs-from-word-and-mask "abase" '(0 1 2 1 0))
 ;   yields {\a (2 0), \b (1), \s (1), \e (0)}
@@ -124,14 +123,22 @@
 ;; (def two-as (gen-char-count-fn \a 2 true))
 ;; (two-as "abcda") --> true
 ;; (two-as "abada") --> false
-(defn gen-char-count-fn [ch-match ct-expected eq?]
-   (let [comp-fn (if eq? = >=)]
-    (fn [w] 
-     (comp-fn 
-     		(count (filter (partial = ch-match) w))
-    			ct-expected))))
 
-(defn regex-from-word-and-mask [w-word mask-list]
+;; USING AS A FILTER
+;; (def listy '("abcde" "aahed" "dacha" "hairy"))
+;; (def one-or-more-cs (gen-char-count-fn \c 1 false))
+;; (def two-as (gen-char-count-fn \a 1 true))
+;; ((comp (partial filter two-as) (partial filter one-or-more-cs)) listy)
+;; ---> yields '("dacha")
+(defn gen-char-count-filter-fn [ch-match ct-expected eq?]
+   (let [comp-fn (if eq? = >=)]
+    (partial filter 
+      (fn [w] 
+       (comp-fn 
+     	  	(count (filter (partial = ch-match) w))
+    		  	ct-expected)))))
+
+(defn regex-str-from-word-and-mask [w-word mask-list]
    (apply str
      (map 
        (fn [w m]
@@ -139,6 +146,12 @@
    		w-word
    		mask-list)))
 
+;; TODO COMP LEFT
+(defn regex-filter-from-word-and-mask  [w-word mask-list]
+		(partial filter
+		  #(re-matches (re-pattern (regex-str-from-word-and-mask w-word mask-list)) %)))
+
+;; TODO COMP RIGHT
 ;; \a (2 0)
 (defn rev-color-seq-to-filter-fn [ch rev-color-seq]
   ;; if contains 1 0 (black "before" yellow), it's always fanlse
@@ -150,9 +163,17 @@
   							(rev-seq-contains-black-then-yellow rev-color-seq)
   							]
   	(if has-black-then-yellow 
-  	    (fn [w] false)
-  				 (gen-char-count-fn ch ct-yg (> ct-black 0)))))
+  	    (partial filter (fn [w] false))
+  				 (gen-char-count-filter-fn ch ct-yg (> ct-black 0)))))
 
+; TODO START HERE NEXT
+; (defn new-filter-fn-from-mask-list-and-word [w-word mask-list]
+;   (let [regex-filter (regex-filter-from-word-and-mask w-word mask-list)
+;   					rev-color-seqs (rev-color-seqs-from-word-and-mask w-word mask-list)
+; 							char-count-filters (map rev-color-seq-to-filter-fn (keys rev-color-seqs) (vals rev-color-seqs))
+;   					]
+
+  				
 
 
 ;; TODO END NEW ZONE
@@ -162,9 +183,13 @@
 
 (defn calculate-entropy-numerator [result-set]
   (let [c (count result-set)]
-    (cond (= 0 c) 0
-          (= 1 c) (- c)
-          :else  (/ (* (Math/log c) c) (Math/log 2)))))
+    (if (= 0 c) 0 
+           (/ (* (Math/log c) c) (Math/log 2)))))
+
+
+;; takes input like ((shown) () () () () ... ) and sees if there's a single word that matches.
+(defn -results-match-single-word? [w-word l-matching-word-seq]
+	 	(= w-word (first (first (filter (complement empty?) l-matching-word-seq)))))
 
 (defn evaluate-move [all-mask-lists dict-answers w-word]
   (let [matching-words (map
@@ -174,11 +199,13 @@
         ;; but some patterns overlap so words are doubled.
         ;; This at least fixes the denominator
         total-words (apply + (map count matching-words))
-        n-entropy-numerator (apply +
-                                   (map calculate-entropy-numerator
-                                        matching-words))
-        n-entropy (/ n-entropy-numerator total-words)
-        ]
+        n-entropy (if (and (= 1 total-words) (-results-match-single-word? w-word matching-words))
+      							  -100 ;; NOTE: A match! 
+											(/
+													(apply +
+		               (map calculate-entropy-numerator
+		                    matching-words))
+												total-words))]
     {:entropy n-entropy
      :matches (zipmap all-mask-lists matching-words)}))
 
@@ -200,21 +227,22 @@
                         results)]
     sorted-results))
 
-;; returns dict-answers
+;; takes result type (["guess" {:entropy 1.23 :matches {(1 0 0 0 0) ("right" "wrong")] ... )
+;; returns a single row of type: ["guess" {:entropy 1.23 :matches {(1 0 0 0 0) ("right" "wrong")]
 (defn extract-row-from-results [r str-word]
-  (filter #(= str-word (first %)) r))
+  (first (filter #(= str-word (first %)) r)))
 
-(defn just-words-and-entropy [evaluations]
-  (map #(list (first %) (first (second %))) evaluations))
+(defn just-words-and-entropy [r]
+  (map #(list (first %) (first (second %))) r))
 
 (defn play-move [dict-answers dict-allowed-guesses r-evals str-word l-mask]
   (let [entry (extract-row-from-results r-evals str-word)] 
     (if (nil? entry) nil
-        (-> entry first second :matches (get l-mask)))))
+        (-> entry second :matches (get l-mask)))))
 
 
-(defn viable-answer-words [l-answers r-evals] (filter #(get (set l-answers) (first %))
-                                    (just-words-and-entropy r-evals)))
+(defn viable-answer-words [l-answers r] (filter #(get (set l-answers) (first %))
+                                    (just-words-and-entropy r)))
 
 (defn intersect-blocks [a b]
    (into '()  (clojure.set/intersection (set a) (set b))))
@@ -254,8 +282,7 @@
       {
         :entropy (:entropy (second r-row))
         :matches (select-keys mymap (for [[k v] mymap :when (not (empty? v))] k))
-      }
-    ]))
+      }]))
 
 ;; USAGE
 
@@ -278,5 +305,5 @@
 	  (def response-mask '(0 0 2 2 0))
 	  (play-move l-answers l-allowed-guesses r-evals w-word response-mask)
 	  (def l-answers *1)
-	  
-)
+	 
+	)

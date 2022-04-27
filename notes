@@ -1,0 +1,32 @@
+(def l-answers test-dict-answers)
+(def l-allowed-guesses test-dict-allowed-guesses)
+
+(def l-answers dict-answers)
+(def l-allowed-guesses dict-allowed-guesses)
+
+(def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes 10-15 minutes.
+(def r-evals r-top)
+
+(def r-evals (evaluate-all-moves l-answers l-allowed-guesses))
+; (def r-evals (evaluate-all-moves l-answers l-answers))
+
+; (pprint (map clean-results-row r-top))
+;;  (pprint clean-results-row (extract-row-from-results r-evals "lemel"))
+
+;; NOTE: Hard mode limits not to viable words but to matcher words in union of dict and allowed guesses
+(pprint (take 10 (just-words-and-entropy r-evals)))
+
+(pprint (take 10 (viable-answer-words l-answers r-evals)))
+
+;; (pprint ( clean-results-row (extract-row-from-results r-evals "passe")))
+
+;; TODO: Can't just use these four lines repeatedly - there's something wrong
+;; with not updating r-evals
+;; MAKE YOUR CHOICE
+
+; NOTE: If your guess is not in the dict, this won't work!  TODO
+(def w-word "shown")
+(def response-mask '(2 2 2 2 2))
+(play-move l-answers l-allowed-guesses r-evals w-word response-mask)
+(def l-answers *1)
+
