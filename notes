@@ -10,8 +10,17 @@
 (def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes 10-15 minutes.
 (java.time.LocalDateTime/now)
 
-(def r-evals r-top)
+; RESET
 
+(def r-evals r-top)
+(def r-evals-1 r-evals)
+(def r-evals-2 r-evals)
+(def r-evals-3 r-evals)
+(def r-evals-4 r-evals)
+(def l-answers-1 dict-answers)
+(def l-answers-2 dict-answers)
+(def l-answers-3 dict-answers)
+(def l-answers-4 dict-answers)
 
 
 (java.time.LocalDateTime/now)
@@ -21,24 +30,44 @@
 (def r-evals-4 (evaluate-all-moves l-answers-4 l-allowed-guesses))
 (java.time.LocalDateTime/now)
 
+
+
+
 (pprint (take 40 (-sum-entropies (map just-words-and-entropy (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
 
 
+;; TODO Make this work 
+; (pprint (take 40 (-sum-entropies (map (partial viable-answer-words dict-answers) (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
+
 (pprint (map clean-results-row r-evals))
-;;  (pprint clean-results-row (extract-row-from-results r-evals "tweep"))
+;;  (pprint (clean-results-row (extract-row-from-results r-evals-1 "drift")))
 
 ;; NOTE: Hard mode limits not to viable words but to matcher words in union of dict and allowed guesses
 (pprint (take 10 (just-words-and-entropy r-evals)))
 
 (pprint (take 10 (viable-answer-words l-answers r-evals)))
 
-;; (pprint ( clean-results-row (extract-row-from-results r-evals "zesty")))
+;; (pprint ( clean-results-row (extract-row-from-results r-evals "plant")))
 
 ; NOTE: If your guess is not in the dict, this won't work!  TODO
-(def w-word "raise") 
-(def response-mask '(0 0 0 1 1))
-(play-move l-answers l-allowed-guesses r-evals w-word response-mask)
+
+(def w-word "cyton") 
+(def response-mask-1 '(0 2 0 0 0))
+(play-move l-answers-1 l-allowed-guesses r-evals-1 w-word response-mask-1)
+(def l-answers-1 *1)
+
+(def response-mask-2 '(0 1 0 1 0))
+(play-move l-answers-2 l-allowed-guesses r-evals-2 w-word response-mask-2)
+(def l-answers-2 *1)
+
+(def response-mask-3 '(1 0 0 1 0))
+(play-move l-answers-3 l-allowed-guesses r-evals-3 w-word response-mask-3)
+(def l-answers-3 *1)
+
+(def response-mask-4 '(0 0 0 0 1))
+(play-move l-answers-4 l-allowed-guesses r-evals-4 w-word response-mask-4)
 (def l-answers-4 *1)
+
 
                
 

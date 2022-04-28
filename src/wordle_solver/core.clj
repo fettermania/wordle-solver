@@ -286,10 +286,6 @@
    										;; TOOD here
                         #((revised-new-filter-fn-from-mask-list-and-word w-word %)
                           dict-answers) all-mask-lists)
-        ;; TODO Klugey fix here.  Total words should always be (count dict-answers)
-        ;; but some patterns overlap so words are doubled.
-        ;; This at least fixes the denominator
-        ;; total-words (apply + (map count matching-words)) ;; TODO remove
         total-words (count dict-answers)
         n-entropy (cond 
         							(= 0 total-words) 
@@ -352,6 +348,7 @@
 
 
 ;; takes result set, finds the word's row, and extracts the matches from that row
+;; TODO - this doesn't use the first two arguments
 (defn play-move [dict-answers dict-allowed-guesses r-evals str-word l-mask]
   (let [entry (extract-row-from-results r-evals str-word)] 
     (if (nil? entry) nil

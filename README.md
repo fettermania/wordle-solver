@@ -121,7 +121,7 @@ RESULT:
 - If empty, return negative
 - Else generate letter filters, regex function, and compose all of these (order doesn't matter)
 
-This is the path:
+This is the plan:
 - Compute regex for all: green is in, yellow or black is out for that space.  That's the regex
 - Compute total count for all.  If there's a black, it's equal.  If not, it's at least that many.  Those are the other functions.
 - Ensure no black precedes a yellow.  If so, make a null.
@@ -129,7 +129,32 @@ This is the path:
 {\a: (BLACK YELLOW) \b: (GREEN) }etc.
  (update (update {} \a conj 1) \a conj 2)
 
-EXTRA FIX: remove the kludge / kluge throw in earlier.
+#### Enhancement / Bug: The second win
+
+- ["drift" -100.0]
+ ["dross" -100.0]
+ ["whirl" -100.0]
+ ["kebab" -100.0]
+ ["lemel" 0.0]
+ ["bayes" 0.0]
+
+ even after scoring on Drift.
+
+Perhaps play move removes it from the l-answers if the record looks like ["drift" {:entropy -100, :matches {(2 2 2 2 2) ("drift")}}]?
+
+
+#### Cleanup: Remove redundant arguments
+- e.g. play-move
+
+#### Enhancement: Speed
+
+- Even a trivial action (e.g. size one dictionary) takes minutes to do 13000 times.  13000 guess options times 243 (3^5) is 3M custom functions built and applied.
+- Memoization?
+- Are there any guesses we can eliminate as providing NO information?  Probably not!
+- Faster substring functions?
+#### Enhancement: When to guess
+
+- See endgame-trubs
 
 #### Enhancement: Build hard mode in
 
@@ -141,5 +166,5 @@ It is possible to cull the l-allowed-guesses list to fir this.  It hasn't been i
 
 #### Others
 
-- Filter empty results in evaluation output for readbility
-- Bug: An answer set with one option should make everything -1 (b/c you know the answer!)
+- [FIXED] Filter empty results in evaluation output for readbility
+- [FIXED] Bug: An answer set with one option should make everything -100 (b/c you know the answer!)
