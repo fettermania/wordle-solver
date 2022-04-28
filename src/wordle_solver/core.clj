@@ -46,6 +46,8 @@
 (def all-mask-lists (generate-all-mask-lists 5))
 
 
+;;  == SECTION: OLD STRATEGY - incorrect ==
+
 ;; takes "a" and returns function that strips out everything but (\a \a \a...)
 ;; example: ((_gen-includer-filter "a") "adage"
 (defn _gen-includer-filter [letter]
@@ -79,12 +81,11 @@
         (comp filter-regex filter-includes)))
 
 
-;; TODO NEW ZONE  
+;; == SECTION: New strategies ==
 
 ;  (color-seqs-from-word-and-mask "abase" '(0 1 2 1 0))
 ;;   yields {\a (2 0), \b (1), \s (1), \e (0)}
 ;;   really like \a (GREEN BLACK), \b (YELLOW) \s (YELLOW) \e (BLACK)
-
 ;; Another example
 ; (def w-word "dacha")
 ; (def mask-list '(1 2 0 0 0))
@@ -134,9 +135,22 @@
   					(and (not= first-black-ix -1)
   									 (not= last-yellow-reverse-ix -1)
   									 (< first-black-ix last-yellow-ix))))
-
   								
-;; (def two-or-more-as (gen-char-count-filter-fn \a 2 >=))
+;
+; (def listy '("abcde" "aahed" "dacha" "hairy"))
+; (regex-str-from-word-and-mask "dacha" '(1 2 0 0 0)) 
+;; yields -> "[^d]a[^c][^h][^a]"
+(defn regex-str-from-word-and-mask [w-word mask-list]
+   (apply str
+     (map 
+       (fn [w m]
+         (if (= m GREEN) w (str "[^" w "]")))
+   		w-word
+   		mask-list)))
+
+;; Strategy 2: Create comp'd filter functions
+
+; (def two-or-more-as (gen-char-count-filter-fn \a 2 >=))
 ;; (two-or-more-as "abadc") --> true
 ;; (two-or-more-as "abddc") --> false
 
@@ -157,16 +171,7 @@
    	  	(count (filter (partial = ch-match) w))
   		  	ct-expected))))
 
-; (def listy '("abcde" "aahed" "dacha" "hairy"))
-; (regex-str-from-word-and-mask "dacha" '(1 2 0 0 0)) 
-;; yields -> "[^d]a[^c][^h][^a]"
-(defn regex-str-from-word-and-mask [w-word mask-list]
-   (apply str
-     (map 
-       (fn [w m]
-         (if (= m GREEN) w (str "[^" w "]")))
-   		w-word
-   		mask-list)))
+
 
 ; (def listy '("abcde" "aahed" "dacha" "hairy"))
 ; ((regex-filter-from-word-and-mask "dacha" '(1 2 0 0 0))  listy)
@@ -174,6 +179,7 @@
 (defn regex-filter-from-word-and-mask  [w-word mask-list]
 		(partial filter
 		  #(re-matches (re-pattern (regex-str-from-word-and-mask w-word mask-list)) %)))
+
 
 ; (def listy '("abcde" "aahed" "dacha" "hairy"))
 ; (def invalid-mask-seq (get (rev-color-seqs-from-word-and-mask "dacha" '(0 0 0 0 1)) \a))
@@ -195,13 +201,56 @@
   	    (partial filter (fn [w] false))
   			(gen-char-count-filter-fn ch ct-yg (if (> ct-black 0) = >=)))))
 
-; TODO START HERE NEXT
+
+; TODO Consider filter on this: (filter (apply every-pred (list number? even?)) '(3 4 5 )) 
 (defn new-filter-fn-from-mask-list-and-word [w-word mask-list]
   (let [regex-filter (regex-filter-from-word-and-mask w-word mask-list)
   			rev-color-seqs (rev-color-seqs-from-word-and-mask w-word mask-list)
 				char-count-filters (map rev-color-seq-to-filter-fn (keys rev-color-seqs) (vals rev-color-seqs))
-  			ultimate-filter-fn (reduce comp (conj regex-filter char-count-filters))]
+  			ultimate-filter-fn (reduce comp (conj char-count-filters regex-filter))]
   			ultimate-filter-fn))
+
+
+;; Filter strategy 3 (correct, faster) - create comp'd predicate, apply filter once
+(defn gen-char-count-pred [ch-match ct-expected comp-fn]
+    (fn [w] 
+     (comp-fn 
+   	  	(count (filter (partial = ch-match) w))
+  		  	ct-expected)))
+
+(defn regex-pred-from-word-and-mask  [w-word mask-list]
+		  #(re-matches (re-pattern (regex-str-from-word-and-mask w-word mask-list)) %))
+
+
+(defn rev-color-seq-to-pred [ch rev-color-seq]
+  ;; if contains 1 0 (black "before" yellow), it's always fanlse
+  ;; if it contains a 0, then it's exact count of non-0s
+  ;; otherwise its that many non-0s or more
+  (let [ct-black (count (filter (partial = 0) rev-color-seq))
+				ct-yg (count (filter (partial not= 0) rev-color-seq))
+				has-black-then-yellow 
+					(rev-seq-contains-black-then-yellow rev-color-seq)]
+  	(if has-black-then-yellow 
+  	    (fn [w] false)
+  			(gen-char-count-pred ch ct-yg (if (> ct-black 0) = >=)))))
+
+(defn revised-new-filter-fn-from-mask-list-and-word [w-word mask-list]
+  (let [regex-pred (regex-pred-from-word-and-mask w-word mask-list)
+  			rev-color-seqs (rev-color-seqs-from-word-and-mask w-word mask-list)
+				char-count-preds (map rev-color-seq-to-pred (keys rev-color-seqs) (vals rev-color-seqs))
+  			ultimate-filter-fn (partial filter (apply every-pred (concat char-count-preds (list regex-pred))))]
+  			ultimate-filter-fn))
+
+
+; (def matching-new-words (map
+;                       ;;  #((old-filter-fn-from-mask-list-and-word w-word %)
+;                        #((new-filter-fn-from-mask-list-and-word w-word %)
+;                           dict-answers) all-mask-lists))
+
+; (def matching-old-words (map
+;                       ;;  #((old-filter-fn-from-mask-list-and-word w-word %)
+;                        #((old-filter-fn-from-mask-list-and-word w-word %)
+;                           dict-answers) all-mask-lists))
 
 ;; TODO END NEW ZONE
 
@@ -227,15 +276,21 @@
   ;   (0 1 2 1 1) ("asses"),
   ;   (2 2 2 2 2) ("passe"),
   ;   (0 1 0 0 0) ("bland")}}]
+
+
+
 ;; NOTE: disk-answers empty returns all 0, no matches
 (defn evaluate-move [all-mask-lists dict-answers w-word]
-  (let [matching-words (map
-                        #((old-filter-fn-from-mask-list-and-word w-word %)
+  (let [_ (println "Checking guess " w-word)
+  			matching-words (map
+   										;; TOOD here
+                        #((revised-new-filter-fn-from-mask-list-and-word w-word %)
                           dict-answers) all-mask-lists)
         ;; TODO Klugey fix here.  Total words should always be (count dict-answers)
         ;; but some patterns overlap so words are doubled.
         ;; This at least fixes the denominator
-        total-words (apply + (map count matching-words))
+        ;; total-words (apply + (map count matching-words)) ;; TODO remove
+        total-words (count dict-answers)
         n-entropy (cond 
         							(= 0 total-words) 
         							  0 ;; an error state - should not get here unless dict-answers empty
@@ -301,6 +356,21 @@
   (let [entry (extract-row-from-results r-evals str-word)] 
     (if (nil? entry) nil
         (-> entry second :matches (get l-mask)))))
+
+;; SECITON: Quordle time
+
+
+(defn result-set-to-map [l-result-set]
+  (zipmap (map first l-result-set)
+  				(map (comp second second) l-result-set)))
+
+(defn -sum-entropies [l-result-sets]
+  (let [l-result-maps (map result-set-to-map l-result-sets)
+  			total-scores (apply merge-with + l-result-maps)
+  			 sorted-results (sort (fn [[k1 v1] [k2 v2]] (< v1 v2)) total-scores)
+  ]
+  sorted-results))
+
 
 ;; SECTION: CUTTING DOWN INITIAL SET 
 
