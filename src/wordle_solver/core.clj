@@ -281,7 +281,7 @@
 
 ;; NOTE: disk-answers empty returns all 0, no matches
 (defn evaluate-move [all-mask-lists dict-answers w-word]
-  (let [_ (println "Checking guess " w-word)
+  (let [;_ (println "Checking guess " w-word)
   			matching-words (map
    										;; TOOD here
                         #((revised-new-filter-fn-from-mask-list-and-word w-word %)

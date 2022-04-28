@@ -10,30 +10,35 @@
 (def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes 10-15 minutes.
 (java.time.LocalDateTime/now)
 
-
 (def r-evals r-top)
 
+
+
 (java.time.LocalDateTime/now)
-(def r-evals (evaluate-all-moves l-answers l-allowed-guesses))
+(def r-evals-1 (evaluate-all-moves l-answers-1 l-allowed-guesses))
+(def r-evals-2 (evaluate-all-moves l-answers-2 l-allowed-guesses))
+(def r-evals-3 (evaluate-all-moves l-answers-3 l-allowed-guesses))
+(def r-evals-4 (evaluate-all-moves l-answers-4 l-allowed-guesses))
 (java.time.LocalDateTime/now)
 
+(pprint (take 40 (-sum-entropies (map just-words-and-entropy (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
 
 
 (pprint (map clean-results-row r-evals))
-;;  (pprint clean-results-row (extract-row-from-results r-evals "aahed"))
+;;  (pprint clean-results-row (extract-row-from-results r-evals "tweep"))
 
 ;; NOTE: Hard mode limits not to viable words but to matcher words in union of dict and allowed guesses
 (pprint (take 10 (just-words-and-entropy r-evals)))
 
 (pprint (take 10 (viable-answer-words l-answers r-evals)))
 
-;; (pprint ( clean-results-row (extract-row-from-results r-evals "duply")))
+;; (pprint ( clean-results-row (extract-row-from-results r-evals "zesty")))
 
 ; NOTE: If your guess is not in the dict, this won't work!  TODO
-(def w-word "wordy") 
-(def response-mask '(1 2 1 1 2))
+(def w-word "raise") 
+(def response-mask '(0 0 0 1 1))
 (play-move l-answers l-allowed-guesses r-evals w-word response-mask)
-(def l-answers *1)
+(def l-answers-4 *1)
 
                
 
