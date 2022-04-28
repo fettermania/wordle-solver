@@ -64,7 +64,7 @@
         (= mask-elt YELLOW) (apply str "[^" black-list word-elt "]")
         :else   (apply str "[^" black-list "]")))
 
-(defn filter-fn-from-mask-list-and-word [w-word mask-list]
+(defn old-filter-fn-from-mask-list-and-word [w-word mask-list]
   (let [seq-word (seq w-word)
         black-list (apply-mask-to-word mask-list seq-word BLACK)
         yellow-list (apply-mask-to-word mask-list seq-word  YELLOW)
@@ -76,20 +76,23 @@
         filter-regex (partial filter #(re-matches (re-pattern regex-str) %))
         filter-includes (gen-includer-filters yellow-list)
         ]
-        (comp filter-regex filter-includes) ;; TODO Put new thing in here.
-;; TODO NOTE:
-;; wordle-solver.core=> (def operations [inc inc inc])
-;; #'wordle-solver.core/operations
-;; wordle-solver.core=> ((apply comp operations) 1)
-;; 4
+        (comp filter-regex filter-includes)))
 
-        ))
 
 ;; TODO NEW ZONE  
 
 ;  (color-seqs-from-word-and-mask "abase" '(0 1 2 1 0))
-;   yields {\a (2 0), \b (1), \s (1), \e (0)}
-; Note that sequences are reversed from the order in word
+;;   yields {\a (2 0), \b (1), \s (1), \e (0)}
+;;   really like \a (GREEN BLACK), \b (YELLOW) \s (YELLOW) \e (BLACK)
+
+;; Another example
+; (def w-word "dacha")
+; (def mask-list '(1 2 0 0 0))
+; (rev-color-seqs-from-word-and-mask w-word mask-list)
+;; yields {\d (1), \a (0 2), \c (0), \h (0)}
+
+; GOTCHA: Note that sequences are reversed from the order in word
+; TODO FIX THIS?
 (defn rev-color-seqs-from-word-and-mask [w-word mask-list]
   (loop [word w-word 
   			    mask mask-list
@@ -101,7 +104,26 @@
  									 	 	(rest mask)
 	  	 									(update accum (first word) conj (first mask))))))
 
+
+; (def invalid-mask (rev-color-seqs-from-word-and-mask "dacha" '(0 0 0 0 1)))
+; (def valid-mask-1 (rev-color-seqs-from-word-and-mask "dacha" '(0 1 0 0 0)))
+; (def valid-mask-2 (rev-color-seqs-from-word-and-mask "dacha" '(0 2 0 0 1)))
+; (def valid-mask-3 (rev-color-seqs-from-word-and-mask "dacha" '(0 1 0 0 1)))
+; (every? (complement rev-seq-contains-black-then-yellow) (vals invalid-mask))
+; ; yields false
+; (every? (complement rev-seq-contains-black-then-yellow) (vals valid-mask-1))
+; ; yields true
+; (every? (complement rev-seq-contains-black-then-yellow) (vals valid-mask-2))
+; ; yields true
+; (every? (complement rev-seq-contains-black-then-yellow) (vals valid-mask-3))
+; ; yields true
 ;; Note: This might be prettier as "0.*1" in a regex
+
+; ; MORE RAW: 
+; (rev-seq-contains-black-then-yellow '(1 0))
+; ; true
+; (rev-seq-contains-black-then-yellow '(0 1))
+; ; false
 (defn rev-seq-contains-black-then-yellow [rev-color-seq]
   (let [rev-color-str (apply str rev-color-seq)
   					 color-str (apply str (reverse rev-color-seq))
@@ -113,31 +135,31 @@
   									 (not= last-yellow-reverse-ix -1)
   									 (< first-black-ix last-yellow-ix))))
 
-  									
-;; TODO 4/14 - look at these as filters?  
-
-;; (def two-or-more-as (gen-char-count-fn \a 2 false))
+  								
+;; (def two-or-more-as (gen-char-count-filter-fn \a 2 >=))
 ;; (two-or-more-as "abadc") --> true
 ;; (two-or-more-as "abddc") --> false
 
-;; (def two-as (gen-char-count-fn \a 2 true))
+;; (def two-as (gen-char-count-filter-fn \a 2 =))
 ;; (two-as "abcda") --> true
 ;; (two-as "abada") --> false
 
 ;; USING AS A FILTER
-;; (def listy '("abcde" "aahed" "dacha" "hairy"))
-;; (def one-or-more-cs (gen-char-count-fn \c 1 false))
-;; (def two-as (gen-char-count-fn \a 1 true))
-;; ((comp (partial filter two-as) (partial filter one-or-more-cs)) listy)
-;; ---> yields '("dacha")
-(defn gen-char-count-filter-fn [ch-match ct-expected eq?]
-   (let [comp-fn (if eq? = >=)]
-    (partial filter 
-      (fn [w] 
-       (comp-fn 
-     	  	(count (filter (partial = ch-match) w))
-    		  	ct-expected)))))
+; (def listy '("abcde" "aahed" "dacha" "hairy"))
+; (def one-or-more-cs (gen-char-count-filter-fn \c 1 >=))
+; (def two-as (gen-char-count-filter-fn \a 2 =))
+; ((comp two-as one-or-more-cs) listy)
+;  ; ---> yields '("dacha")
+(defn gen-char-count-filter-fn [ch-match ct-expected comp-fn]
+  (partial filter 
+    (fn [w] 
+     (comp-fn 
+   	  	(count (filter (partial = ch-match) w))
+  		  	ct-expected))))
 
+; (def listy '("abcde" "aahed" "dacha" "hairy"))
+; (regex-str-from-word-and-mask "dacha" '(1 2 0 0 0)) 
+;; yields -> "[^d]a[^c][^h][^a]"
 (defn regex-str-from-word-and-mask [w-word mask-list]
    (apply str
      (map 
@@ -146,38 +168,44 @@
    		w-word
    		mask-list)))
 
-;; TODO COMP LEFT
+; (def listy '("abcde" "aahed" "dacha" "hairy"))
+; ((regex-filter-from-word-and-mask "dacha" '(1 2 0 0 0))  listy)
+;; yields -> ("aahed" "hairy")
 (defn regex-filter-from-word-and-mask  [w-word mask-list]
 		(partial filter
 		  #(re-matches (re-pattern (regex-str-from-word-and-mask w-word mask-list)) %)))
 
-;; TODO COMP RIGHT
-;; \a (2 0)
+; (def listy '("abcde" "aahed" "dacha" "hairy"))
+; (def invalid-mask-seq (get (rev-color-seqs-from-word-and-mask "dacha" '(0 0 0 0 1)) \a))
+; (def valid-mask-seq-1 (get (rev-color-seqs-from-word-and-mask "dacha" '(0 1 0 0 0)) \a))
+; ((rev-color-seq-to-filter-fn \a invalid-mask-seq) listy)
+; ; yields (), since invalidated by black-then-yellow
+; ((rev-color-seq-to-filter-fn \a valid-mask-seq-1) listy)
+; ; yields ("abcde" "hairy"), since they both have one a
+; MORE RAW, it takes in \a and '(2 0), for example
 (defn rev-color-seq-to-filter-fn [ch rev-color-seq]
   ;; if contains 1 0 (black "before" yellow), it's always fanlse
   ;; if it contains a 0, then it's exact count of non-0s
   ;; otherwise its that many non-0s or more
   (let [ct-black (count (filter (partial = 0) rev-color-seq))
-  						ct-yg (count (filter (partial not= 0) rev-color-seq))
-  						has-black-then-yellow 
-  							(rev-seq-contains-black-then-yellow rev-color-seq)
-  							]
+				ct-yg (count (filter (partial not= 0) rev-color-seq))
+				has-black-then-yellow 
+					(rev-seq-contains-black-then-yellow rev-color-seq)]
   	(if has-black-then-yellow 
   	    (partial filter (fn [w] false))
-  				 (gen-char-count-filter-fn ch ct-yg (> ct-black 0)))))
+  			(gen-char-count-filter-fn ch ct-yg (if (> ct-black 0) = >=)))))
 
 ; TODO START HERE NEXT
-; (defn new-filter-fn-from-mask-list-and-word [w-word mask-list]
-;   (let [regex-filter (regex-filter-from-word-and-mask w-word mask-list)
-;   					rev-color-seqs (rev-color-seqs-from-word-and-mask w-word mask-list)
-; 							char-count-filters (map rev-color-seq-to-filter-fn (keys rev-color-seqs) (vals rev-color-seqs))
-;   					]
-
-  				
-
+(defn new-filter-fn-from-mask-list-and-word [w-word mask-list]
+  (let [regex-filter (regex-filter-from-word-and-mask w-word mask-list)
+  			rev-color-seqs (rev-color-seqs-from-word-and-mask w-word mask-list)
+				char-count-filters (map rev-color-seq-to-filter-fn (keys rev-color-seqs) (vals rev-color-seqs))
+  			ultimate-filter-fn (reduce comp (conj regex-filter char-count-filters))]
+  			ultimate-filter-fn))
 
 ;; TODO END NEW ZONE
 
+;; Example filter functions: include, regex
 (def fn-d (partial filter #(str/includes? % "D")))
 (def fn-reg1 #(filter (fn [w] (re-matches #"[^ER][^ER]A[^S]E" w)) %))
 
@@ -186,22 +214,37 @@
     (if (= 0 c) 0 
            (/ (* (Math/log c) c) (Math/log 2)))))
 
-
 ;; takes input like ((shown) () () () () ... ) and sees if there's a single word that matches.
 (defn -results-match-single-word? [w-word l-matching-word-seq]
 	 	(= w-word (first (first (filter (complement empty?) l-matching-word-seq)))))
 
+;; evaluate-move takes global mask list, dict-answers, and "passe" to one row of r-evals
+ ;; ["passe"
+  ; {:entropy 0.3333333333333333,
+  ;  :matches
+  ;  {(0 2 0 0 0) ("dacha" "hairy"),
+  ;   (0 2 2 2 2) ("masse"),
+  ;   (0 1 2 1 1) ("asses"),
+  ;   (2 2 2 2 2) ("passe"),
+  ;   (0 1 0 0 0) ("bland")}}]
+;; NOTE: disk-answers empty returns all 0, no matches
 (defn evaluate-move [all-mask-lists dict-answers w-word]
   (let [matching-words (map
-                        #((filter-fn-from-mask-list-and-word w-word %)
+                        #((old-filter-fn-from-mask-list-and-word w-word %)
                           dict-answers) all-mask-lists)
-        ;; TODO Klugey fix here.  Total words should always be dict-answers
+        ;; TODO Klugey fix here.  Total words should always be (count dict-answers)
         ;; but some patterns overlap so words are doubled.
         ;; This at least fixes the denominator
         total-words (apply + (map count matching-words))
-        n-entropy (if (and (= 1 total-words) (-results-match-single-word? w-word matching-words))
-      							  -100 ;; NOTE: A match! 
-											(/
+        n-entropy (cond 
+        							(= 0 total-words) 
+        							  0 ;; an error state - should not get here unless dict-answers empty
+        							(and 
+        							  	(= 1 total-words) 
+        								  (-results-match-single-word? w-word matching-words))
+      							    -100 ;; NOTE: A match! 
+      							  :else 
+											  (/
 													(apply +
 		               (map calculate-entropy-numerator
 		                    matching-words))
@@ -209,40 +252,57 @@
     {:entropy n-entropy
      :matches (zipmap all-mask-lists matching-words)}))
 
-;; sorted list of:
+;; sorted list of evaluate-move mapped to each guess in allowed-guesues:
 ;; ["aahed"
 ;;  {:entropy 7.78318320736531353,
-;;   :MATCHES
+;;   :matches
 ;;   {(2 0 2 2 0) ("ashen"),
 ;;     (2 0 2 0 0) ("abhor"),
 ;;    (1 2 0 2 1) ("cadet" "laden"),
-(defn evaluate-all-moves [dict-answers dict-allowed-guesses]
+(defn evaluate-all-moves [l-answers l-allowed-guesses]
   (let [all-mask-lists (generate-all-mask-lists 5)
         results (zipmap
-                 dict-allowed-guesses
-                 (map (partial evaluate-move all-mask-lists dict-answers)
-                      dict-allowed-guesses))
+                 l-allowed-guesses
+                 (map (partial evaluate-move all-mask-lists l-answers)
+                      l-allowed-guesses))
         sorted-results (sort
                         #(< (:entropy (second %1)) (:entropy (second %2)))
                         results)]
     sorted-results))
+
+
+
+; NOTE - there's probably a better way to clean out empties from the visual print
+(defn clean-results-row [r-row]
+  (let [mymap (:matches (second r-row))]
+    [(first r-row)
+      {
+        :entropy (:entropy (second r-row))
+        :matches (select-keys mymap (for [[k v] mymap :when (not (empty? v))] k))
+      }]))
+
 
 ;; takes result type (["guess" {:entropy 1.23 :matches {(1 0 0 0 0) ("right" "wrong")] ... )
 ;; returns a single row of type: ["guess" {:entropy 1.23 :matches {(1 0 0 0 0) ("right" "wrong")]
 (defn extract-row-from-results [r str-word]
   (first (filter #(= str-word (first %)) r)))
 
+;; removes :matches from result row.
 (defn just-words-and-entropy [r]
   (map #(list (first %) (first (second %))) r))
 
+;; filters words-and-entropy to only words in answer set
+(defn viable-answer-words [l-answers r] (filter #(get (set l-answers) (first %))
+                                    (just-words-and-entropy r)))
+
+
+;; takes result set, finds the word's row, and extracts the matches from that row
 (defn play-move [dict-answers dict-allowed-guesses r-evals str-word l-mask]
   (let [entry (extract-row-from-results r-evals str-word)] 
     (if (nil? entry) nil
         (-> entry second :matches (get l-mask)))))
 
-
-(defn viable-answer-words [l-answers r] (filter #(get (set l-answers) (first %))
-                                    (just-words-and-entropy r)))
+;; SECTION: CUTTING DOWN INITIAL SET 
 
 (defn intersect-blocks [a b]
    (into '()  (clojure.set/intersection (set a) (set b))))
@@ -274,36 +334,3 @@
        (group-by (comp seq sort)
                  dict-answers))))
 
-
-; NOTE - there's probably a better way to clean out empties from the visual print
-(defn clean-results-row [r-row]
-  (let [mymap (:matches (second r-row))]
-    [(first r-row)
-      {
-        :entropy (:entropy (second r-row))
-        :matches (select-keys mymap (for [[k v] mymap :when (not (empty? v))] k))
-      }]))
-
-;; USAGE
-
-#_(do
-	;; DO ONCE ON INIT
-		(def l-answers dict-answers)
-		(def l-allowed-guesses dict-allowed-guesses)
-		(def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes 10-15 minutes.
-		(def r-evals r-top)
-
-		;; FOR ANY GIVEN STEP
-  (evaluate-all-moves l-answers l-allowed-guesses)
-  (def r-evals *1)
-  (pprint (take 10 (just-words-and-entropy r-evals)))
-
-  (pprint (take 10 (viable-answer-words l-answers r-evals)))
-
-  ;; MAKE YOUR CHOICE
-	  (def w-word "cleat")
-	  (def response-mask '(0 0 2 2 0))
-	  (play-move l-answers l-allowed-guesses r-evals w-word response-mask)
-	  (def l-answers *1)
-	 
-	)
