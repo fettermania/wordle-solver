@@ -70,7 +70,7 @@ Entropy is used in a similar way to Alex Healy's treatment here: http://www.alex
 	$$ (def w-word "cleat")
 	$$ (def response-mask '(0 0 2 2 0))
 
-	$$ (play-move l-answers l-allowed-guesses r-evals w-word response-mask)
+	$$ (play-move r-evals w-word response-mask)
 	$$ (def l-answers *1)
 
 	$$ }  BACK TO NEXT STEP
@@ -129,6 +129,13 @@ This is the plan:
 {\a: (BLACK YELLOW) \b: (GREEN) }etc.
  (update (update {} \a conj 1) \a conj 2)
 
+
+#### Cleanup: Remove redundant arguments
+- e.g. play-move
+
+#### Enhancement: Easier quordle interface
+
+
 #### Enhancement / Bug: The second win
 
 - ["drift" -100.0]
@@ -143,15 +150,14 @@ This is the plan:
 Perhaps play move removes it from the l-answers if the record looks like ["drift" {:entropy -100, :matches {(2 2 2 2 2) ("drift")}}]?
 
 
-#### Cleanup: Remove redundant arguments
-- e.g. play-move
-
 #### Enhancement: Speed
 
-- Even a trivial action (e.g. size one dictionary) takes minutes to do 13000 times.  13000 guess options times 243 (3^5) is 3M custom functions built and applied.
+- Big: Even a trivial action (e.g. size one dictionary) takes minutes to do 13000 times.  13000 guess options times 243 (3^5) is 3M custom functions built and applied.
 - Memoization?
 - Are there any guesses we can eliminate as providing NO information?  Probably not!
-- Faster substring functions?
+- Faster tight loop functions?
+- [DONE] pmap instead of map - improves initial run from 148 minutes to 18 minutes (1/8th the time, which checks out with an 8-core M1)
+
 #### Enhancement: When to guess
 
 - See endgame-trubs

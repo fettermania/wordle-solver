@@ -2,15 +2,12 @@
 (def l-answers dict-answers)
 (def l-allowed-guesses dict-allowed-guesses)
 
-
-(def l-answers test-dict-answers)
-(def l-allowed-guesses test-dict-allowed-guesses)
-
 (java.time.LocalDateTime/now)
-(def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes 10-15 minutes.
+(def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores.
 (java.time.LocalDateTime/now)
 
 ; RESET
+
 
 (def r-evals r-top)
 (def r-evals-1 r-evals)
@@ -24,50 +21,117 @@
 
 
 (java.time.LocalDateTime/now)
-(def r-evals-1 (evaluate-all-moves l-answers-1 l-allowed-guesses))
-(def r-evals-2 (evaluate-all-moves l-answers-2 l-allowed-guesses))
-(def r-evals-3 (evaluate-all-moves l-answers-3 l-allowed-guesses))
-(def r-evals-4 (evaluate-all-moves l-answers-4 l-allowed-guesses))
+(def r-evals-1   (evaluate-all-moves l-answers-1 l-allowed-guesses)) 
+(java.time.LocalDateTime/now)
+
+
+(java.time.LocalDateTime/now)
+(def r-evals-1   (evaluate-all-moves l-answers-1 l-allowed-guesses)) ;; first run takes 30-35 minutes.
+(def r-evals-2   (evaluate-all-moves l-answers-2 l-allowed-guesses)) ;; first run takes 30-35 minutes.
+(def r-evals-3   (evaluate-all-moves l-answers-3 l-allowed-guesses)) ;; first run takes 30-35 minutes.
+(def r-evals-4   (evaluate-all-moves l-answers-4 l-allowed-guesses)) ;; first run takes 30-35 minutes.
 (java.time.LocalDateTime/now)
 
 
 
-
 (pprint (take 40 (-sum-entropies (map just-words-and-entropy (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
+(pprint (take 10 (viable-answer-words l-answers-1 r-evals-1)))
+(pprint (take 10 (viable-answer-words l-answers-2 r-evals-2)))
+(pprint (take 10 (viable-answer-words l-answers-3 r-evals-3)))
+(pprint (take 10 (viable-answer-words l-answers-4 r-evals-4)))
 
 
-;; TODO Make this work 
-; (pprint (take 40 (-sum-entropies (map (partial viable-answer-words dict-answers) (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
+(pprint (take 10 (just-words-and-entropy r-evals-1)))
+
+
+; NOTE: This doesn't work because many words are not viable answers to other puzzles, so included as a "zero"
+
+; (pprint (take 40 (-sum-entropies (map viable-answer-words (list l-answers-1 l-answers-2 l-answers-3 l-answers-4) (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
+
 
 (pprint (map clean-results-row r-evals))
-;;  (pprint (clean-results-row (extract-row-from-results r-evals-1 "drift")))
+;;  (pprint (clean-results-row (extract-row-from-results r-evals-1 "klong")))
 
 ;; NOTE: Hard mode limits not to viable words but to matcher words in union of dict and allowed guesses
 (pprint (take 10 (just-words-and-entropy r-evals)))
 
 (pprint (take 10 (viable-answer-words l-answers r-evals)))
 
-;; (pprint ( clean-results-row (extract-row-from-results r-evals "plant")))
+;; (pprint ( clean-results-row (extract-row-from-results r-evals "horny")))
 
 ; NOTE: If your guess is not in the dict, this won't work!  TODO
 
-(def w-word "cyton") 
-(def response-mask-1 '(0 2 0 0 0))
-(play-move l-answers-1 l-allowed-guesses r-evals-1 w-word response-mask-1)
+(def w-word "clout") 
+(def response-mask-1 '(0 1 1 0 0))
+(play-move w-word r-evals-1 response-mask-1)
 (def l-answers-1 *1)
 
-(def response-mask-2 '(0 1 0 1 0))
-(play-move l-answers-2 l-allowed-guesses r-evals-2 w-word response-mask-2)
+(def response-mask-2 '(0 1 0 0 0))
+(play-move w-word r-evals-2 response-mask-2)
 (def l-answers-2 *1)
 
-(def response-mask-3 '(1 0 0 1 0))
-(play-move l-answers-3 l-allowed-guesses r-evals-3 w-word response-mask-3)
+(def response-mask-3 '(0 0 0 0 0))
+(play-move w-word r-evals-3 response-mask-3)
 (def l-answers-3 *1)
 
-(def response-mask-4 '(0 0 0 0 1))
-(play-move l-answers-4 l-allowed-guesses r-evals-4 w-word response-mask-4)
+(def response-mask-4 '(0 0 2 0 0))
+(play-move w-word r-evals-4 response-mask-4)
 (def l-answers-4 *1)
 
 
-               
+;; TODO Also - better strategy for endgame. 
+
+;; note: uses play-move with w-guess, r-evals, l-mask
+(defn quordle-apply-masks [w-guess l-results r-evals]
+   (map (partial play-move w-guess) l-results r-evals))
+
+;; note: awkward to duplicate allowed guesses
+;; returns four r-results
+(defn quordle-evaluate-moves [l-answers-lists l-allowed-guesses]
+  (map #(evaluate-all-moves % l-allowed-guesses) l-answers-lists))
+
+(defn quordle-best-overall-moves [l-result-lists]
+  (map (just-words-and-entry l-results)))
+
+(defn quordle-top-n-viable [n l-answer-lists l-result-lists]
+  (map (partial take n) l-answer-lists l-result-lists))
+
+
+
+; Note also - if, given guess G, you have one probability distribution P(X = x_i | G) for response mask x_i,
+; and another P(Y = y_j | G), the joint distribution P(X,Y = x_i, y_j  | G) just ends up being
+; the products P(X = x_i | G)P(Y = y_j | G).
+; 
+; To see why, consider restricting X's answer to, say, word w, which produces mask x_i.
+; Then, the probabilty that Y's ultimate answer, v, will produce mask y_j, is entirely unaffected, or P(Y = y_j | X = x_i) = P(Y = y_j).
+; Guess G produces both sets of x_i and y_j, and Y will have the same probability distribution whether restricting to a known solution v or a known solution universe x_i.  More directly, given G, X and Y are independent, and therefore, the entropy of their joint distribution is the sum of the entropies of the individual distributions.
+; 
+; This is a known result [https://en.wikipedia.org/wiki/Joint_entropy#Less_than_or_equal_to_the_sum_of_individual_entropies] but also falls out of the composition law for entropy [https://www2.math.upenn.edu/~ted/280S19/CourseNotes/Shannon'sTheorem-Math280.pdf]:
+; H(p_1,...,p_n) = H(x_1...x_M) + x_1 \cdot H(z_1,1,...,z_1,r_1) + ... + x_M \cdot H(d_M,1,...d_M,r_m)
+; since each of the H entropies on the right hand side are the entropy of Y and are equal, so 
+; H(p_1,...,p_n) = H(x_1...x_M) + (x_1 + ... + x_m)H(y_1 + ... + y,r_n) =  H(X) + H(Y)
+; For the sake of simplicity, we assume that v could equal w, or that a quordle board could have duplicate wordle solutions inside, though this is unlikely for the curated set on quordle.com.
+
+; We've argued that this indepedence is true for two words, and it seems logical that this can be extended to three, four (quordle), eight (octordle), and so on.
+
+
+; It can also be asserted that it is maximally advantageous to solve a wordle on the next move.  The algorithm can be greedy in this scenario.
+
+; TODO
+- build quordle multi-list sugar
+  - remove marked solved words in the list somehow
+- build harness
+  - function: given word, get mask
+  - function: given results, pick word
+  - function: 
+- Multi-file clojure setup
+- pre-generate guess 2 entropies
+  - r takes dictionary and produces: (map of masks to dictionaries, total entropy score)
+  - we'll look at known opening move "soare"
+  - so make: r_dict_0("soare") = (map_soare, E_soare), dict_1 = map_soare["soare"]
+  - and make: r_dict_1(guess_i) = (map_i, E_i), to save for move 2.
+  - then, can randomly generate four boards, do sum_entropy on r_dict_1(guess_i_1) + r_dict_1(guess_i_4) to choose next move.
+
+
+
 

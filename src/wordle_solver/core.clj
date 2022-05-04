@@ -255,8 +255,8 @@
 ;; TODO END NEW ZONE
 
 ;; Example filter functions: include, regex
-(def fn-d (partial filter #(str/includes? % "D")))
-(def fn-reg1 #(filter (fn [w] (re-matches #"[^ER][^ER]A[^S]E" w)) %))
+(def fn-r (partial filter #(str/includes? % "r")))
+(def fn-reg1 #(filter (fn [w] (re-matches #".ai.." w)) %))
 
 (defn calculate-entropy-numerator [result-set]
   (let [c (count result-set)]
@@ -281,9 +281,8 @@
 
 ;; NOTE: disk-answers empty returns all 0, no matches
 (defn evaluate-move [all-mask-lists dict-answers w-word]
-  (let [;_ (println "Checking guess " w-word)
-  			matching-words (map
-   										;; TOOD here
+  (let [matching-words (map
+   										;; TODO - put pmap HERE for speed? ^^^
                         #((revised-new-filter-fn-from-mask-list-and-word w-word %)
                           dict-answers) all-mask-lists)
         total-words (count dict-answers)
@@ -314,7 +313,7 @@
   (let [all-mask-lists (generate-all-mask-lists 5)
         results (zipmap
                  l-allowed-guesses
-                 (map (partial evaluate-move all-mask-lists l-answers)
+                 (pmap (partial evaluate-move all-mask-lists l-answers)
                       l-allowed-guesses))
         sorted-results (sort
                         #(< (:entropy (second %1)) (:entropy (second %2)))
@@ -347,10 +346,15 @@
                                     (just-words-and-entropy r)))
 
 
-;; takes result set, finds the word's row, and extracts the matches from that row
-;; TODO - this doesn't use the first two arguments
-(defn play-move [dict-answers dict-allowed-guesses r-evals str-word l-mask]
-  (let [entry (extract-row-from-results r-evals str-word)] 
+
+
+
+
+;; finds the possible result set remaining after playing a guess.
+;; extracts from pre-generated result types.
+;; TODO - this doesn't use the first two arguments.  It requires r-evals to be current.
+(defn play-move [w-guess r-evals l-mask]
+  (let [entry (extract-row-from-results r-evals w-guess)] 
     (if (nil? entry) nil
         (-> entry second :matches (get l-mask)))))
 
