@@ -2,8 +2,14 @@
 (def l-answers dict-answers)
 (def l-allowed-guesses dict-allowed-guesses)
 
+; (def l-answers test-dict-answers)
+; (def l-allowed-guesses test-dict-allowed-guesses)
+
+;;; AND down to 47 seconds now....
+
 (java.time.LocalDateTime/now)
-(def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores.
+(def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores. 
+; UPDATE  - takes 47 seconds with the new group-by style
 (java.time.LocalDateTime/now)
 
 ; RESET
@@ -19,10 +25,6 @@
 (def l-answers-3 dict-answers)
 (def l-answers-4 dict-answers)
 
-
-(java.time.LocalDateTime/now)
-(def r-evals-1   (evaluate-all-moves l-answers-1 l-allowed-guesses)) 
-(java.time.LocalDateTime/now)
 
 
 (java.time.LocalDateTime/now)
@@ -40,9 +42,8 @@
 (pprint (take 10 (viable-answer-words l-answers-3 r-evals-3)))
 (pprint (take 10 (viable-answer-words l-answers-4 r-evals-4)))
 
-
+)
 (pprint (take 10 (just-words-and-entropy r-evals-1)))
-
 
 ; NOTE: This doesn't work because many words are not viable answers to other puzzles, so included as a "zero"
 
@@ -61,20 +62,20 @@
 
 ; NOTE: If your guess is not in the dict, this won't work!  TODO
 
-(def w-word "clout") 
-(def response-mask-1 '(0 1 1 0 0))
+(def w-word "raise") 
+(def response-mask-1 '(1 0 0 0 1))
 (play-move w-word r-evals-1 response-mask-1)
 (def l-answers-1 *1)
 
-(def response-mask-2 '(0 1 0 0 0))
+(def response-mask-2 '(0 0 0 0 0))
 (play-move w-word r-evals-2 response-mask-2)
 (def l-answers-2 *1)
 
-(def response-mask-3 '(0 0 0 0 0))
+(def response-mask-3 '(1 0 0 0 1))
 (play-move w-word r-evals-3 response-mask-3)
 (def l-answers-3 *1)
 
-(def response-mask-4 '(0 0 2 0 0))
+(def response-mask-4 '(0 1 0 0 0))
 (play-move w-word r-evals-4 response-mask-4)
 (def l-answers-4 *1)
 
@@ -121,7 +122,7 @@
 - build quordle multi-list sugar
   - remove marked solved words in the list somehow
 - build harness
-  - function: given word, get mask
+  - [DONE] function: given word, get mask
   - function: given results, pick word
   - function: 
 - Multi-file clojure setup
@@ -132,6 +133,7 @@
   - and make: r_dict_1(guess_i) = (map_i, E_i), to save for move 2.
   - then, can randomly generate four boards, do sum_entropy on r_dict_1(guess_i_1) + r_dict_1(guess_i_4) to choose next move.
 
+* NOTE: If entropies are equal, should we pick the alphabetically first word to be sure of consistency?
+* NOTE: Should ensure we pick one we haven't picked before (i.e.  that's not counted out) - could just keep them 2 2 2 2 2, to remove from answer set.  Or set answer set explicitly to empty.
 
-
-
+* NOTE: At endgame, 
