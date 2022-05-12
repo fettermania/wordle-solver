@@ -25,6 +25,18 @@
 (def YELLOW 1)
 (def GREEN 2)
 
+(defn generate-all-mask-lists [n]
+  (if (= 1 n) '((0) (1) (2))
+      (let [children (generate-all-mask-lists (dec n))
+            result
+            (reduce concat (list 
+             (map #(conj % BLACK) children)
+             (map #(conj % YELLOW) children)
+             (map #(conj % GREEN) children)))]
+        result)))
+
+(def all-mask-lists (generate-all-mask-lists 5))
+
 ; returns () or (\a \d \d) etc.
 (defn apply-mask-to-word [mask-list seq-word val]
   (filter identity (map #(if (= val %1) %2) mask-list seq-word)))
@@ -97,9 +109,9 @@
 
 ;; NOTE: dict-answers empty returns all 0, no matches
 ;; Also note - this one won't have keys for masks with no matching answers
-(defn evaluate-move [dict-answers w-word]
+(defn evaluate-move [dict-answers w-guess]
   (let [
-  			matching-words (group-by (partial guess-and-answer-to-mask w-word) dict-answers)
+  			matching-words (group-by (partial guess-and-answer-to-mask w-guess) dict-answers)
         total-words (count dict-answers)
        
         n-entropy (cond 
@@ -107,7 +119,7 @@
         							  0 ;; an error state - should not get here unless dict-answers empty
         							(and 
         							  	(= 1 total-words) 
-        								  (-results-match-single-word? w-word (vals matching-words)))
+        								  (-results-match-single-word? w-guess (vals matching-words)))
       							    -100 ;; NOTE: A match! 
       							  :else 
 											  (/
@@ -135,6 +147,14 @@
                         results)]
     sorted-results))
 
+; NOTE - there's probably a better way to clean out empties from the visual print
+(defn clean-results-row [r-row]
+  (let [mymap (:matches (second r-row))]
+    [(first r-row)
+      {
+        :entropy (:entropy (second r-row))
+        :matches (select-keys mymap (for [[k v] mymap :when (not (empty? v))] k))
+      }]))
 
 
 ;; takes result type (["guess" {:entropy 1.23 :matches {(1 0 0 0 0) ("right" "wrong")] ... )
@@ -153,13 +173,15 @@
 
 
 
+(defn -nil-to-empty [r]
+  (if (nil? r) '() r))
 ;; finds the possible result set remaining after playing a guess.
 ;; extracts from pre-generated result types.
 ;; TODO - this doesn't use the first two arguments.  It requires r-evals to be current.
 (defn play-move [w-guess r-evals l-mask]
   (let [entry (extract-row-from-results r-evals w-guess)] 
     (if (nil? entry) nil
-        (-> entry second :matches (get l-mask)))))
+        (-> entry second :matches (get l-mask) -nil-to-empty))))
 
 ;; SECITON: Quordle time
 

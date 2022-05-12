@@ -12,8 +12,7 @@
 ; UPDATE  - takes 47 seconds with the new group-by style
 (java.time.LocalDateTime/now)
 
-; RESET
-
+; RESET for next word
 
 (def r-evals r-top)
 (def r-evals-1 r-evals)
@@ -27,6 +26,40 @@
 
 
 
+; NOTE: This doesn't work because many words are not viable answers to other puzzles, so included as a "zero"
+
+; (pprint (take 40 (-sum-entropies (map viable-answer-words (list l-answers-1 l-answers-2 l-answers-3 l-answers-4) (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
+
+
+;;  (pprint (clean-results-row (extract-row-from-results r-evals-1 "large")))
+
+;; NOTE: Hard mode limits not to viable words but to matcher words in union of dict and allowed guesses
+(pprint (take 10 (just-words-and-entropy r-evals)))
+
+(pprint (take 10 (viable-answer-words l-answers r-evals)))
+
+;; (pprint ( clean-results-row (extract-row-from-results r-evals "ralph")))
+
+; NOTE: If your guess is not in the dict, this won't work!  TODO
+
+(def w-word "large") 
+(def response-mask-1 '(0 2 2 0 2))
+(play-move w-word r-evals-1 response-mask-1)
+(def l-answers-1 *1)
+
+(def response-mask-2 '(0 0 0 0 0))
+(play-move w-word r-evals-2 response-mask-2)
+(def l-answers-2 *1)
+
+(def response-mask-3 '(0 0 1 0 1))
+(play-move w-word r-evals-3 response-mask-3)
+(def l-answers-3 *1)
+
+(def response-mask-4 '(0 0 0 0 0))
+(play-move w-word r-evals-4 response-mask-4)
+(def l-answers-4 *1)
+
+
 (java.time.LocalDateTime/now)
 (def r-evals-1   (evaluate-all-moves l-answers-1 l-allowed-guesses)) ;; first run takes 30-35 minutes.
 (def r-evals-2   (evaluate-all-moves l-answers-2 l-allowed-guesses)) ;; first run takes 30-35 minutes.
@@ -35,49 +68,16 @@
 (java.time.LocalDateTime/now)
 
 
-
 (pprint (take 40 (-sum-entropies (map just-words-and-entropy (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
+
+(pprint (take 40 (-sum-entropies (map just-words-and-entropy (list r-evals-1)))))
+
+;;
+
 (pprint (take 10 (viable-answer-words l-answers-1 r-evals-1)))
 (pprint (take 10 (viable-answer-words l-answers-2 r-evals-2)))
 (pprint (take 10 (viable-answer-words l-answers-3 r-evals-3)))
 (pprint (take 10 (viable-answer-words l-answers-4 r-evals-4)))
-
-)
-(pprint (take 10 (just-words-and-entropy r-evals-1)))
-
-; NOTE: This doesn't work because many words are not viable answers to other puzzles, so included as a "zero"
-
-; (pprint (take 40 (-sum-entropies (map viable-answer-words (list l-answers-1 l-answers-2 l-answers-3 l-answers-4) (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
-
-
-(pprint (map clean-results-row r-evals))
-;;  (pprint (clean-results-row (extract-row-from-results r-evals-1 "klong")))
-
-;; NOTE: Hard mode limits not to viable words but to matcher words in union of dict and allowed guesses
-(pprint (take 10 (just-words-and-entropy r-evals)))
-
-(pprint (take 10 (viable-answer-words l-answers r-evals)))
-
-;; (pprint ( clean-results-row (extract-row-from-results r-evals "horny")))
-
-; NOTE: If your guess is not in the dict, this won't work!  TODO
-
-(def w-word "raise") 
-(def response-mask-1 '(1 0 0 0 1))
-(play-move w-word r-evals-1 response-mask-1)
-(def l-answers-1 *1)
-
-(def response-mask-2 '(0 0 0 0 0))
-(play-move w-word r-evals-2 response-mask-2)
-(def l-answers-2 *1)
-
-(def response-mask-3 '(1 0 0 0 1))
-(play-move w-word r-evals-3 response-mask-3)
-(def l-answers-3 *1)
-
-(def response-mask-4 '(0 1 0 0 0))
-(play-move w-word r-evals-4 response-mask-4)
-(def l-answers-4 *1)
 
 
 ;; TODO Also - better strategy for endgame. 
@@ -136,4 +136,25 @@
 * NOTE: If entropies are equal, should we pick the alphabetically first word to be sure of consistency?
 * NOTE: Should ensure we pick one we haven't picked before (i.e.  that's not counted out) - could just keep them 2 2 2 2 2, to remove from answer set.  Or set answer set explicitly to empty.
 
-* NOTE: At endgame, 
+
+=== Paper ===
+
+For each mask as response to SOARE,dictionary, reduce the dictionary and create the eval list.
+
+
+;; TODO
+
+(defn assume-mask [r-evals l-allowed-guesses l-mask]
+  (let [answers (play-move "soare" r-evals l-mask)
+  	   result (just-words-and-entropy (evaluate-all-moves answers l-allowed-guesses))]
+  	   result))
+
+;; TODO - out of memory a 6000 allowed guesses
+(java.time.LocalDateTime/now)
+(def r-soare r-top)
+(def all-second-moves (map (partial assume-mask r-soare (take 6000 l-allowed-guesses)) all-mask-lists))
+(def l-r-cache (zipmap all-mask-lists all-second-moves))
+(java.time.LocalDateTime/now)
+;(pprint l-r-cache)
+
+; TODO - quordle dictionary includes "lynch!" (but wordle doesn't).  Where to find the dict?

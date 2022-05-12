@@ -4,22 +4,6 @@
 (require '[clojure.string :as str])
 (require '[clojure.set])
 
-;; NOTE This is gross and not general but who cares
-;; returns list(mask)
-;; example return: ((0 0 0 0 0) (0 0 0 0 1) (0 0 0 0 2) ... (2 2 2 2 1) (2 2 2 2 2))
-(defn generate-all-mask-lists [n]
-  (if (= 1 n) '((0) (1) (2))
-      (let [children (generate-all-mask-lists (dec n))
-            result
-            (reduce concat (list 
-             (map #(conj % BLACK) children)
-             (map #(conj % YELLOW) children)
-             (map #(conj % GREEN) children)))]
-        result)))
-
-;; GLOBAL - all 3^5 mask lists
-(def all-mask-lists (generate-all-mask-lists 5))
-
 
 
 ;;  == SECTION: First Strategy - incorrect ==
