@@ -163,15 +163,24 @@
   (first (filter #(= str-word (first %)) r)))
 
 ;; removes :matches from result row.
+;; 
+;; wordle-solver.core=> (pprint (take 10 (just-words-and-entropy r-evals-1)))
+;; (("clint" [:entropy 2.0072359492575713])
+;; ... )
+
 (defn just-words-and-entropy [r]
   (map #(list (first %) (first (second %))) r))
 
 ;; filters words-and-entropy to only words in provided answer set
+;; 
+;; wordle-solver.core=> (pprint (take 10 (viable-answer-words l-answers-1 r-evals-1)))
+;; (("lunch" [:entropy 2.283230818590316])
+;; ... )
+
+;; NOTE: In "hard mode", the next guess HAS to come from here.
+;; In "easy mode", the actual best guess could be (almost?) anything in the dictionary
 (defn viable-answer-words [l-answers r] (filter #(get (set l-answers) (first %))
                                     (just-words-and-entropy r)))
-
-
-
 
 (defn -nil-to-empty [r]
   (if (nil? r) '() r))
@@ -183,9 +192,7 @@
     (if (nil? entry) nil
         (-> entry second :matches (get l-mask) -nil-to-empty))))
 
-;; SECITON: Quordle time
-
-
+;; SECITION: Quordle time
 (defn result-set-to-map [l-result-set]
   (zipmap (map first l-result-set)
   				(map (comp second second) l-result-set)))
@@ -197,6 +204,14 @@
   ]
   sorted-results))
 
+(defn play-moves [l-allowed-guesses w-word l-response-masks l-result-sets]
+  (let [l-new-answer-lists (map 
+  												 		(partial play-move w-word) 
+  														l-result-sets 
+  														l-response-masks)
+  		  l-new-result-sets (map #(evaluate-all-moves % l-allowed-guesses) l-new-answer-lists)
+  ]
+  l-new-result-sets))
 
 ;; SECTION: Cheater tools
 ;; -  cutting down initial set if you have other information.

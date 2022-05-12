@@ -1,101 +1,42 @@
 ;; USAGE
+
+
+; SETUP 
+
 (def l-answers dict-answers)
 (def l-allowed-guesses dict-allowed-guesses)
 
-; (def l-answers test-dict-answers)
-; (def l-allowed-guesses test-dict-allowed-guesses)
-
-;;; AND down to 47 seconds now....
-
 (java.time.LocalDateTime/now)
-(def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores. 
+(def r-firstmove   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores. 
 ; UPDATE  - takes 47 seconds with the new group-by style
 (java.time.LocalDateTime/now)
 
-; RESET for next word
-
-(def r-evals r-top)
-(def r-evals-1 r-evals)
-(def r-evals-2 r-evals)
-(def r-evals-3 r-evals)
-(def r-evals-4 r-evals)
-(def l-answers-1 dict-answers)
-(def l-answers-2 dict-answers)
-(def l-answers-3 dict-answers)
-(def l-answers-4 dict-answers)
+(def l-results (repeat 4 r-firstmove))
 
 
+; LOOP 
 
-; NOTE: This doesn't work because many words are not viable answers to other puzzles, so included as a "zero"
+; Evaluate position 
+(pprint (take 10 (-sum-entropies (map just-words-and-entropy l-results))))
 
-; (pprint (take 40 (-sum-entropies (map viable-answer-words (list l-answers-1 l-answers-2 l-answers-3 l-answers-4) (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
+;; PLAY:SOARE
+;; play word
+(def w-word "soare")
 
+;; get respones
+(def l-responses  '((0 0 0 0 0) (0 0 2 1 0) (0 0 1 0 0) (1 0 1 0 0)))
 
-;;  (pprint (clean-results-row (extract-row-from-results r-evals-1 "large")))
+;; make move
+(def l-results (play-moves l-allowed-guesses w-word l-responses l-results))
+;; TODO in here - annotate round finished
 
-;; NOTE: Hard mode limits not to viable words but to matcher words in union of dict and allowed guesses
-(pprint (take 10 (just-words-and-entropy r-evals)))
-
-(pprint (take 10 (viable-answer-words l-answers r-evals)))
-
-;; (pprint ( clean-results-row (extract-row-from-results r-evals "ralph")))
-
-; NOTE: If your guess is not in the dict, this won't work!  TODO
-
-(def w-word "large") 
-(def response-mask-1 '(0 2 2 0 2))
-(play-move w-word r-evals-1 response-mask-1)
-(def l-answers-1 *1)
-
-(def response-mask-2 '(0 0 0 0 0))
-(play-move w-word r-evals-2 response-mask-2)
-(def l-answers-2 *1)
-
-(def response-mask-3 '(0 0 1 0 1))
-(play-move w-word r-evals-3 response-mask-3)
-(def l-answers-3 *1)
-
-(def response-mask-4 '(0 0 0 0 0))
-(play-move w-word r-evals-4 response-mask-4)
-(def l-answers-4 *1)
-
-
-(java.time.LocalDateTime/now)
-(def r-evals-1   (evaluate-all-moves l-answers-1 l-allowed-guesses)) ;; first run takes 30-35 minutes.
-(def r-evals-2   (evaluate-all-moves l-answers-2 l-allowed-guesses)) ;; first run takes 30-35 minutes.
-(def r-evals-3   (evaluate-all-moves l-answers-3 l-allowed-guesses)) ;; first run takes 30-35 minutes.
-(def r-evals-4   (evaluate-all-moves l-answers-4 l-allowed-guesses)) ;; first run takes 30-35 minutes.
-(java.time.LocalDateTime/now)
-
-
-(pprint (take 40 (-sum-entropies (map just-words-and-entropy (list r-evals-1 r-evals-2 r-evals-3 r-evals-4)))))
-
-(pprint (take 40 (-sum-entropies (map just-words-and-entropy (list r-evals-1)))))
-
-;;
-
-(pprint (take 10 (viable-answer-words l-answers-1 r-evals-1)))
-(pprint (take 10 (viable-answer-words l-answers-2 r-evals-2)))
-(pprint (take 10 (viable-answer-words l-answers-3 r-evals-3)))
-(pprint (take 10 (viable-answer-words l-answers-4 r-evals-4)))
+;; (pprint (nth (nth l-results 0) 0))
+;; (pprint (nth (nth l-results 1) 0))
+;; (pprint (nth (nth l-results 2) 0))
+;; (pprint (nth (nth l-results 3) 0))
 
 
 ;; TODO Also - better strategy for endgame. 
-
-;; note: uses play-move with w-guess, r-evals, l-mask
-(defn quordle-apply-masks [w-guess l-results r-evals]
-   (map (partial play-move w-guess) l-results r-evals))
-
-;; note: awkward to duplicate allowed guesses
-;; returns four r-results
-(defn quordle-evaluate-moves [l-answers-lists l-allowed-guesses]
-  (map #(evaluate-all-moves % l-allowed-guesses) l-answers-lists))
-
-(defn quordle-best-overall-moves [l-result-lists]
-  (map (just-words-and-entry l-results)))
-
-(defn quordle-top-n-viable [n l-answer-lists l-result-lists]
-  (map (partial take n) l-answer-lists l-result-lists))
 
 
 
@@ -125,13 +66,13 @@
   - [DONE] function: given word, get mask
   - function: given results, pick word
   - function: 
-- Multi-file clojure setup
 - pre-generate guess 2 entropies
   - r takes dictionary and produces: (map of masks to dictionaries, total entropy score)
   - we'll look at known opening move "soare"
   - so make: r_dict_0("soare") = (map_soare, E_soare), dict_1 = map_soare["soare"]
   - and make: r_dict_1(guess_i) = (map_i, E_i), to save for move 2.
   - then, can randomly generate four boards, do sum_entropy on r_dict_1(guess_i_1) + r_dict_1(guess_i_4) to choose next move.
+- Refactor: Multi-file clojure setup
 
 * NOTE: If entropies are equal, should we pick the alphabetically first word to be sure of consistency?
 * NOTE: Should ensure we pick one we haven't picked before (i.e.  that's not counted out) - could just keep them 2 2 2 2 2, to remove from answer set.  Or set answer set explicitly to empty.
