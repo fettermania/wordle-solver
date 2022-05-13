@@ -11,30 +11,54 @@
 ; UPDATE  - takes 47 seconds with the new group-by style
 (java.time.LocalDateTime/now)
 
+;; INIT 
+
 (def l-results (repeat 4 r-firstmove))
+(def finished-answers '())
+(def game-state harness-initial-game-state)
 
-
-; LOOP 
-
-; Evaluate position 
 (pprint (take 10 (-sum-entropies (map just-words-and-entropy l-results))))
 
-;; PLAY:SOARE
-;; play word
-(def w-word "soare")
+(def w-guess (harness-select-best-guess  
+  (-sum-entropies (map just-words-and-entropy l-results))
+  finished-answers))
 
-;; get respones
-(def l-responses  '((0 0 0 0 0) (0 0 2 1 0) (0 0 1 0 0) (1 0 1 0 0)))
+; LOOP
+
+(println "STOP. Play move " w-guess)
+
+;; get response masks
+(def l-response-masks '(
+  (2 2 2 2 2) 
+  (0 2 2 0 0) 
+  (1 0 0 1 0) 
+  (0 1 1 0 1)
+  ))
+
+(def game-state (harness-update-game-state game-state w-guess l-response-masks))
+
+(println "New game state ")
+(pprint game-state)
 
 ;; make move
-(def l-results (play-moves l-allowed-guesses w-word l-responses l-results))
-;; TODO in here - annotate round finished
+(def move-results
+  (play-moves l-allowed-guesses w-guess l-response-masks l-results))
 
-;; (pprint (nth (nth l-results 0) 0))
-;; (pprint (nth (nth l-results 1) 0))
-;; (pprint (nth (nth l-results 2) 0))
-;; (pprint (nth (nth l-results 3) 0))
+(def l-results (first move-results))
+(def l-answer-lists (second move-results))
 
+(pprint
+  (map list
+     (map first l-results)
+     l-answer-lists))
+
+(pprint (take 10 (-sum-entropies (map just-words-and-entropy l-results))))
+
+(def w-guess (harness-select-best-guess  
+  (-sum-entropies (map just-words-and-entropy l-results))
+  (:found-words game-state)))
+
+(println "STOP. Play move " w-guess)
 
 ;; TODO Also - better strategy for endgame. 
 

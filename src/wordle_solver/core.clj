@@ -103,8 +103,18 @@
 (defn pred-guess-produces-mask-with-answer [w-guess m-mask w-answer]
   (= m-mask (guess-and-answer-to-mask w-guess w-answer)))
 
-
-
+;; sorted list of evaluate-move mapped to each guess in allowed-guesues:
+;; ["aahed"
+;;  {:entropy 7.78318320736531353,
+;;   :matches
+;;   {(2 0 2 2 0) ("ashen"),
+;;     (2 0 2 0 0) ("abhor"),
+;;    (1 2 0 2 1) ("cadet" "laden"),
+;; TODO Apply this to evaluate-move
+(defn generate-empty-eval [l-allowed-guesses]
+  (map (fn [g]
+  	[g
+  	 {:entropy 0 :matches {}}]) l-allowed-guesses))
 
 
 ;; NOTE: dict-answers empty returns all 0, no matches
@@ -130,13 +140,7 @@
     {:entropy n-entropy
      :matches matching-words}))
 
-;; sorted list of evaluate-move mapped to each guess in allowed-guesues:
-;; ["aahed"
-;;  {:entropy 7.78318320736531353,
-;;   :matches
-;;   {(2 0 2 2 0) ("ashen"),
-;;     (2 0 2 0 0) ("abhor"),
-;;    (1 2 0 2 1) ("cadet" "laden"),
+
 (defn evaluate-all-moves [l-answers l-allowed-guesses]
   (let [results (zipmap
                  l-allowed-guesses
@@ -204,14 +208,49 @@
   ]
   sorted-results))
 
-(defn play-moves [l-allowed-guesses w-word l-response-masks l-result-sets]
+;; TODO Consider returning answer lists for debugging
+(defn play-moves [l-allowed-guesses w-word l-responses l-results]
   (let [l-new-answer-lists (map 
   												 		(partial play-move w-word) 
-  														l-result-sets 
-  														l-response-masks)
+  														l-results 
+  														l-responses)
   		  l-new-result-sets (map #(evaluate-all-moves % l-allowed-guesses) l-new-answer-lists)
   ]
-  l-new-result-sets))
+  (list 
+	  l-new-result-sets
+	  l-new-answer-lists
+	  )))
+
+;; SECTION: Harness
+
+(defn harness-generate-random-word [l-answer-dict] 
+	(rand-nth l-answer-dict)
+)
+
+(defn harness-select-best-guess [summed-entropies l-found-words]
+  (first (filter (complement (set l-found-words)) 
+  							 (map first summed-entropies))))
+
+(def harness-initial-game-state 
+	{ 
+		:round 0
+		:rounds-finished '()
+		:found-words '()
+		:guesses '()
+	})
+
+(defn harness-update-game-state [game-state w-guess l-response-masks]
+   (let [new-round (inc (:round game-state))
+				 num-finished (count (filter #(= '(2 2 2 2 2) %) l-response-masks))
+         new-found-words (concat (:found-words game-state) (repeat num-finished w-guess))
+         new-rounds-finished (concat (:rounds-finished game-state) (repeat num-finished new-round))
+         new-guesses (concat (:guesses game-state) (list w-guess))] 
+        { 
+          :round new-round
+          :rounds-finished new-rounds-finished
+          :found-words new-found-words
+          :guesses new-guesses 
+          }))
 
 ;; SECTION: Cheater tools
 ;; -  cutting down initial set if you have other information.
