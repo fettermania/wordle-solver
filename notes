@@ -29,16 +29,18 @@
 
 ;; get response masks
 (def l-response-masks '(
-  (2 2 2 2 2) 
-  (0 2 2 0 0) 
-  (1 0 0 1 0) 
-  (0 1 1 0 1)
+  (0 0 0 0 2) 
+  (0 1 0 0 0 ) 
+  (1 1 0 0 0) 
+  (0 0 0 1 0) 
   ))
 
 (def game-state (harness-update-game-state game-state w-guess l-response-masks))
 
 (println "New game state ")
 (pprint game-state)
+
+;; TODO check - are we done?
 
 ;; make move
 (def move-results
@@ -60,9 +62,9 @@
 
 (println "STOP. Play move " w-guess)
 
-;; TODO Also - better strategy for endgame. 
-
-
+;; TODO Also - better strategy for endgame.  
+;;; TODO if the highest entropy is zero, only play a valid word?  (Or if tied, pick valid word)
+;;; TODO if there are only two guesses left, play one of them?
 
 ; Note also - if, given guess G, you have one probability distribution P(X = x_i | G) for response mask x_i,
 ; and another P(Y = y_j | G), the joint distribution P(X,Y = x_i, y_j  | G) just ends up being

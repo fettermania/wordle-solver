@@ -113,14 +113,13 @@
 ;; TODO Apply this to evaluate-move
 (defn generate-empty-eval [l-allowed-guesses]
   (map (fn [g]
-  	[g
-  	 {:entropy 0 :matches {}}]) l-allowed-guesses))
+  	 [g {:entropy 0 :matches {}}]) l-allowed-guesses))
 
 
 ;; NOTE: dict-answers empty returns all 0, no matches
 ;; Also note - this one won't have keys for masks with no matching answers
 (defn evaluate-move [dict-answers w-guess]
-  (let [
+   (let [
   			matching-words (group-by (partial guess-and-answer-to-mask w-guess) dict-answers)
         total-words (count dict-answers)
        
@@ -142,14 +141,17 @@
 
 
 (defn evaluate-all-moves [l-answers l-allowed-guesses]
-  (let [results (zipmap
+  ;; NOTE - this is just for convenience.  The harness shouldn't allow for
+  ;; any empty result sets.
+  (if (empty? l-answers) (generate-empty-eval l-allowed-guesses)
+    (let [results (zipmap
                  l-allowed-guesses
                  (pmap (partial evaluate-move l-answers)
                       l-allowed-guesses))
         sorted-results (sort
                         #(< (:entropy (second %1)) (:entropy (second %2)))
                         results)]
-    sorted-results))
+    sorted-results)))
 
 ; NOTE - there's probably a better way to clean out empties from the visual print
 (defn clean-results-row [r-row]
