@@ -1,5 +1,7 @@
 ;; USAGE
 
+(dotimes [n 10000]
+  (harness-run-one-trial r-firstmove))
 
 ; SETUP 
 
@@ -14,14 +16,13 @@
 ;; INIT 
 
 (def l-results (repeat 4 r-firstmove))
-(def finished-answers '())
 (def game-state harness-initial-game-state)
 
 (pprint (take 10 (-sum-entropies (map just-words-and-entropy l-results))))
 
 (def w-guess (harness-select-best-guess  
   (-sum-entropies (map just-words-and-entropy l-results))
-  finished-answers))
+  (:found-words game-state)))
 
 ; LOOP
 
@@ -29,10 +30,10 @@
 
 ;; get response masks
 (def l-response-masks '(
-  (0 0 0 0 2) 
-  (0 1 0 0 0 ) 
-  (1 1 0 0 0) 
-  (0 0 0 1 0) 
+  (0 0 0 0 0) 
+  (2 2 2 2 2)
+  (0 0 0 0 0) 
+  (0 0 0 0 0) 
   ))
 
 (def game-state (harness-update-game-state game-state w-guess l-response-masks))
