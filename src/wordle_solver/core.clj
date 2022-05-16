@@ -257,7 +257,7 @@
 
 (defn log-results [answers-set game-state]
   (spit "output.txt" (apply str (interpose "," answers-set)) :append true)
-  (spit "output.txt" "," :append true)
+  (spit "output.txt" ";" :append true)
   (spit "output.txt" (apply str (interpose "," (:rounds-finished game-state))) :append true)
   (spit "output.txt" ";" :append true)
   (spit "output.txt" (apply str (interpose "," (:guesses game-state))) :append true)
@@ -272,30 +272,29 @@
   	:append true)))
 
 
-(defn harness-run-one-trial [cached-results]
-  (let [answers-set (repeatedly 4 #(harness-generate-random-word dict-answers))
-  			_ (println "Answers set")
-  			_ (pprint answers-set)]
-  	(loop [game-state harness-initial-game-state
-  				l-results (repeat 4 cached-results)
-			  	w-guess (harness-select-best-guess  
-									  (-sum-entropies (map just-words-and-entropy l-results))
-										(:found-words game-state))]
- 							(let [
-		  					l-response-masks (map (partial guess-and-answer-to-mask w-guess) answers-set)
-		  					new-game-state (harness-update-game-state game-state w-guess l-response-masks)
-		  					_ (println "game state")
-		  					_ (pprint new-game-state)]
-						  	(if (= 4 (count (:found-words new-game-state))) (log-results answers-set new-game-state) ;; termination
-					  			(let [move-results (play-moves l-allowed-guesses w-guess l-response-masks l-results)
-												l-results (first move-results)
-		  									l-answer-lists (second move-results)
-		  									_ (println "Excluding words ")
-		  									_ (pprint (:found-words new-game-state))
-								  			w-next-guess (harness-select-best-guess  
-																		  (-sum-entropies (map just-words-and-entropy l-results))
-																		  (:found-words new-game-state))]
-								  			(recur new-game-state l-results w-next-guess)))))))
+
+(defn harness-run-one-trial [cached-results answers-set]
+	(loop [game-state harness-initial-game-state
+				l-results cached-results
+		  	w-guess (harness-select-best-guess  
+								  (-sum-entropies (map just-words-and-entropy l-results))
+									(:found-words game-state))]
+							(let [
+				_ (pprint "got here")
+	  					l-response-masks (map (partial guess-and-answer-to-mask w-guess) answers-set)
+	  					new-game-state (harness-update-game-state game-state w-guess l-response-masks)
+	  					_ (println "game state")
+	  					_ (pprint new-game-state)]
+					  	(if (= (count answers-set) (count (:found-words new-game-state))) (log-results answers-set new-game-state) ;; termination
+				  			(let [move-results (play-moves l-allowed-guesses w-guess l-response-masks l-results)
+											l-results (first move-results)
+	  									l-answer-lists (second move-results)
+	  									_ (println "Excluding words ")
+	  									_ (pprint (:found-words new-game-state))
+							  			w-next-guess (harness-select-best-guess  
+																	  (-sum-entropies (map just-words-and-entropy l-results))
+																	  (:found-words new-game-state))]
+							  			(recur new-game-state l-results w-next-guess))))))
 
 
 

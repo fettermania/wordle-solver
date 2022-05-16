@@ -1,7 +1,21 @@
 ;; USAGE
 
-(dotimes [n 10000]
-  (harness-run-one-trial r-firstmove))
+;; Do all in dictionary
+(map (fn [answer] 
+  (let [answers-set (repeat 1 answer)
+        _ (println "Answers set")
+        _ (pprint answers-set)]
+        (harness-run-one-trial (repeat 1 r-firstmove) answers-set)))
+      dict-answers)
+
+
+;; Run random trials
+
+(dotimes [n 10]
+  (let [answers-set (repeatedly 1 #(harness-generate-random-word dict-answers))
+        _ (println "Answers set")
+        _ (pprint answers-set)]
+        (harness-run-one-trial (repeat 1 r-firstmove) answers-set)))
 
 ; SETUP 
 
