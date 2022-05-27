@@ -1,22 +1,5 @@
 ;; USAGE
 
-;; Do all in dictionary
-(map (fn [answer] 
-  (let [answers-set (repeat 1 answer)
-        _ (println "Answers set")
-        _ (pprint answers-set)]
-        (harness-run-one-trial (repeat 1 r-firstmove) answers-set)))
-      dict-answers)
-
-
-;; Run random trials
-
-(dotimes [n 10]
-  (let [answers-set (repeatedly 1 #(harness-generate-random-word dict-answers))
-        _ (println "Answers set")
-        _ (pprint answers-set)]
-        (harness-run-one-trial (repeat 1 r-firstmove) answers-set)))
-
 ; SETUP 
 
 (def l-answers dict-answers)
@@ -26,6 +9,27 @@
 (def r-firstmove   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores. 
 ; UPDATE  - takes 47 seconds with the new group-by style
 (java.time.LocalDateTime/now)
+
+
+;; Do all in dictionary
+(map (fn [answer] 
+  (let [answers-set (repeat 1 answer)
+        _ (println "Answers set")
+        _ (pprint answers-set)]
+        (harness-run-one-trial (repeat 1 r-firstmove) answers-set l-allowed-guesses)
+      dict-answers)
+
+
+;; Run random trials
+
+(dotimes [n 10000]
+  (let [answers-set (repeatedly 8 #(harness-generate-random-word dict-answers))
+        _ (println "Answers set")
+        _ (pprint answers-set)]
+        (harness-run-one-trial (repeat 8 r-firstmove) answers-set l-allowed-guesses)))
+
+
+
 
 ;; INIT 
 
@@ -44,10 +48,11 @@
 
 ;; get response masks
 (def l-response-masks '(
-  (0 0 0 0 0) 
-  (2 2 2 2 2)
-  (0 0 0 0 0) 
-  (0 0 0 0 0) 
+  (0 0 1 0 1) 
+  (0 0 2 0 0) 
+  (0 0 0 1 2) 
+
+  (0 1 0 0 0) 
   ))
 
 (def game-state (harness-update-game-state game-state w-guess l-response-masks))
@@ -120,6 +125,7 @@
 
 
 === Paper ===
+Results : https://docs.google.com/spreadsheets/d/1HNO99xhrcCi4EJTrNlMMffcTI1JiSzPTChrrCypKt4k/edit#gid=856023958
 
 For each mask as response to SOARE,dictionary, reduce the dictionary and create the eval list.
 
