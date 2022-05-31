@@ -110,22 +110,31 @@
   - remove marked solved words in the list somehow
 - build harness
   - [DONE] function: given word, get mask
-  - function: given results, pick word
-  - function: 
-- pre-generate guess 2 entropies
-  - r takes dictionary and produces: (map of masks to dictionaries, total entropy score)
-  - we'll look at known opening move "soare"
-  - so make: r_dict_0("soare") = (map_soare, E_soare), dict_1 = map_soare["soare"]
-  - and make: r_dict_1(guess_i) = (map_i, E_i), to save for move 2.
-  - then, can randomly generate four boards, do sum_entropy on r_dict_1(guess_i_1) + r_dict_1(guess_i_4) to choose next move.
+  - [DONE] function: given results, pick word
 - Refactor: Multi-file clojure setup
 
-* NOTE: If entropies are equal, should we pick the alphabetically first word to be sure of consistency?
-* NOTE: Should ensure we pick one we haven't picked before (i.e.  that's not counted out) - could just keep them 2 2 2 2 2, to remove from answer set.  Or set answer set explicitly to empty.
+* [WON'T DO] NOTE: If entropies are equal, should we pick the alphabetically first word to be sure of consistency?
+* [DONE] NOTE: Should ensure we pick one we haven't picked before (i.e.  that's not counted out) - could just keep them 2 2 2 2 2, to remove from answer set.  Or set answer set explicitly to empty.
 
 
 === Paper ===
 Results : https://docs.google.com/spreadsheets/d/1HNO99xhrcCi4EJTrNlMMffcTI1JiSzPTChrrCypKt4k/edit#gid=856023958
+
+- Detail the game (wordle, quordle, octordle)
+  - For the likely reader, Wordle likely needs no introduction. As Minesweeper with a restricted solution set (an English dictionary restricted to a reduced set of five-letter words), the sharing and scarcity aspects of the game led to its viral spread, various knockoffs, and ultimate purchase by the New York Tinmes.
+  - With six guesses to determine the mystery word, each turn yields information in the form of Green, Yellow, and Black squares.  At any given slot of five:
+     - A green square indicates the guess has the correct letter in that slot.
+     - A yellow square indicates the guessed letter does not match the solution in this slot, but exists elsewhere in the solution.
+     - A black square indicates the guessed letter does not match the solution in this slot, and there are no more instances of this letter in the solution.   
+     - If the solution has five unique letters, the above rules are straightforward to interpret.
+     - If the solution has repeated letters, note that, for any letter:
+       - All yellow squares appear before all black squares.
+       - The number of green and yellow squares don't exceed the number of instances of the letter in the soluton.
+      - In the current dictionary, triple lettes include bobby, daddy, eerie, emcee, geese, melee, tepee, fluff, mamma, mammy, mummy, nanny, ninny, pappy, puppy, error, rarer, sassy, sissy, and tatty (20 words).
+  - Starting with a well-known dictionary of 2309 words (link), the player has six guesses to enter the correct word (that is, receive all greens as a response).  
+  - Again, this is just like Mastermind, except that TWO dictionaries play a large role:
+     - All answers come from the answers dictionary (TODO github link), with 2309 entires.
+     - All allowed guesses come from the guesses dictionary (TODO github link), with 129
 
 For each mask as response to SOARE,dictionary, reduce the dictionary and create the eval list.
 
