@@ -5,6 +5,7 @@
 
 (require '[clojure.string :as str])
 (require '[clojure.set])
+(require '[clojure.pprint])
 
 ;; LOAD 
 (def answers-filename "wordle-answers.txt")
@@ -277,6 +278,7 @@
 							(let [
 	  					l-response-masks (map (partial guess-and-answer-to-mask w-guess) answers-set)
 	  					new-game-state (harness-update-game-state game-state w-guess l-response-masks)
+	  					_ (println "== NEW GAME STATE ==") _ (clojure.pprint/pprint new-game-state)
 	  					]
 					  	(if (= (count answers-set) (count (:found-words new-game-state))) (log-results answers-set new-game-state) ;; termination
 				  			(let [move-results (play-moves l-allowed-guesses w-guess l-response-masks l-results)

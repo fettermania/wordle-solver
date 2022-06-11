@@ -2,14 +2,20 @@
 
 ; SETUP 
 
-(def l-answers dict-answers)
-(def l-allowed-guesses dict-allowed-guesses)
+(def l-answers test-dict-answers)
+(def l-allowed-guesses test-dict-allowed-guesses)
 
 (java.time.LocalDateTime/now)
 (def r-firstmove   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores. 
 ; UPDATE  - takes 47 seconds with the new group-by style
 (java.time.LocalDateTime/now)
 
+=
+(dotimes [n 1]
+  (let [answers-set (repeatedly 4 #(harness-generate-random-word l-answers))
+        _ (println "Answers set")
+        _ (pprint answers-set)]
+        (harness-run-one-trial (repeat 4 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-summed)))
 
 ;; Do all in dictionary
 (map (fn [answer] 
@@ -21,12 +27,6 @@
 
 
 ;; Run random trials
-
-(dotimes [n 10000]
-  (let [answers-set (repeatedly 4 #(harness-generate-random-word dict-answers))
-        _ (println "Answers set")
-        _ (pprint answers-set)]
-        (harness-run-one-trial (repeat 4 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-summed)))
 
 
 
