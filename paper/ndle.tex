@@ -141,7 +141,7 @@ In first part of the last example, event A was twice as likely as B as well as C
 
 $H(E) = -\sum_{i=1}^{2309} \log_2(p_i)p_i = -\sum_{i=1}^{2309} \log_2(\frac{1}{2309}) \frac{1}{2309} = \log_2(2309) = 11.173$. 
 
-This should not surprise; optimally communicating any of 256 characters in the ASCII set in plaintext requires $\log_2(256) = 8$ bits.
+This should not surprise.  If you needed to communicate a message using 128 symbols with a uniform random distribution, you would need $\log_2(128) = 7$ bits for each. The ASCII encoding is one such example.
 
 If our dictionary of viable answers, filtered through learnings from previous guesses, is of size $m$, then our entropy measure of our answer set (filtered dictionary) at that point will be $\log_2(m)$, since each word is assumed equally likely. Notably, a single viable word remaining (a finished game) has entropy of $\log_2(1) = 0$. The solver's goal is to narrow its (filtered) dictionary to a single word, or, equivalently, to an event set with entropy zero.
  

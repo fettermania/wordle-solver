@@ -229,9 +229,15 @@
 	(rand-nth l-answer-dict)
 )
 
-(defn harness-select-best-guess [summed-entropies l-found-words]
+(defn harness-select-best-guess-summed [l-results l-found-words]
   (first (filter (complement (set l-found-words)) 
-  							 (map first summed-entropies))))
+  							 (map first (-sum-entropies (map just-words-and-entropy l-results))))))
+
+;; TODO - picks MIN (first) of sorted, still doesn't randomly break ties
+(defn harness-select-best-guess-global-min [l-results l-found-words]
+  (first (filter (complement (set l-found-words)) 
+				 			  (sort (fn [a b] (< (-> a second second) (-> b second second)))  
+				 			  						(map #(first (just-words-and-entropy %)) l-results)))))
 
 (def harness-initial-game-state 
 	{ 
@@ -263,22 +269,21 @@
   (spit "output.txt" (apply str (interpose "," (:guesses game-state))) :append true)
     (spit "output.txt" \newline :append true))
 
-(defn harness-run-one-trial [cached-results answers-set l-allowed-guesses]
+(defn harness-run-one-trial [cached-results answers-set l-allowed-guesses f-heuristic]
 	(loop [game-state harness-initial-game-state
 				l-results cached-results
-		  	w-guess (harness-select-best-guess  
-								  (-sum-entropies (map just-words-and-entropy l-results))
-									(:found-words game-state))]
+		  	w-guess (f-heuristic l-results
+																																							(:found-words game-state))]
 							(let [
 	  					l-response-masks (map (partial guess-and-answer-to-mask w-guess) answers-set)
-	  					new-game-state (harness-update-game-state game-state w-guess l-response-masks)]
+	  					new-game-state (harness-update-game-state game-state w-guess l-response-masks)
+	  					]
 					  	(if (= (count answers-set) (count (:found-words new-game-state))) (log-results answers-set new-game-state) ;; termination
 				  			(let [move-results (play-moves l-allowed-guesses w-guess l-response-masks l-results)
 											l-results (first move-results)
 	  									l-answer-lists (second move-results)
-							  			w-next-guess (harness-select-best-guess  
-																	  (-sum-entropies (map just-words-and-entropy l-results))
-																	  (:found-words new-game-state))]
+							  			w-next-guess (f-heuristic l-results 
+																																																	  (:found-words new-game-state))]
 							  			(recur new-game-state l-results w-next-guess))))))
 
 

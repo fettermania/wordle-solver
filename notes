@@ -23,10 +23,10 @@
 ;; Run random trials
 
 (dotimes [n 10000]
-  (let [answers-set (repeatedly 8 #(harness-generate-random-word dict-answers))
+  (let [answers-set (repeatedly 4 #(harness-generate-random-word dict-answers))
         _ (println "Answers set")
         _ (pprint answers-set)]
-        (harness-run-one-trial (repeat 8 r-firstmove) answers-set l-allowed-guesses)))
+        (harness-run-one-trial (repeat 4 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-summed)))
 
 
 
