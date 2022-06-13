@@ -236,9 +236,14 @@
 
 ;; TODO - picks MIN (first) of sorted, still doesn't randomly break ties
 (defn harness-select-best-guess-global-min [l-results l-found-words]
-  (first (filter (complement (set l-found-words)) 
-				 			  (sort (fn [a b] (< (-> a second second) (-> b second second)))  
-				 			  						(map #(first (just-words-and-entropy %)) l-results)))))
+  (let [r 
+				  		  	(first (filter (complement (set l-found-words)) 
+				 			      (sort (fn [a b] (< (-> a second second) (-> b second second)))  
+				 			  						(reduce concat (map just-words-and-entropy l-results)))))
+				    ]
+				    (first r)))
+
+
 
 (def harness-initial-game-state 
 	{ 
@@ -297,34 +302,19 @@
 		 			 	w-guess (f-heuristic l-results
 																																							(:found-words game-state))]
 							(let [
-	  				;	_ (println "== TOP OF LOOP: Guess is ==")
-								; _ (clojure.pprint/pprint w-guess)
-
 	  					l-response-masks (map (partial guess-and-answer-to-mask w-guess) remaining-answers-set)
-	  					; _ (println "== Apply guess.  Response masks ==") _ (clojure.pprint/pprint 		l-response-masks)
-	  					
 	  					new-game-state (harness-update-game-state game-state w-guess l-response-masks)
-	  					; _ (println "== NEW GAME STATE ==") _ (clojure.pprint/pprint new-game-state)
+	  					_ (println "== NEW GAME STATE ==") _ (clojure.pprint/pprint new-game-state)
 
 	  					correct-indices (find-indices l-response-masks '(2 2 2 2 2))
-	  					; _ (println "== correct-indices ==") _ (clojure.pprint/pprint correct-indices)
-	  					
-
 	  					[l-new-results l-new-answer-lists] (play-moves l-allowed-guesses w-guess l-response-masks l-results)
 				  		l-results (drop-indices l-new-results correct-indices)
 				  		l-answer-lists (drop-indices l-new-answer-lists correct-indices)
-				  		; _ (println "== l-results after filtering ==") _ (clojure.pprint/pprint l-results)
-
-	  					remaining-answers-set (drop-indices remaining-answers-set correct-indices)
-	  					; _ (println "== remaining-answers-set ==") _ (clojure.pprint/pprint remaining-answers-set)
-
+				  		remaining-answers-set (drop-indices remaining-answers-set correct-indices)
 	  					]
 					  	(if (zero? (count remaining-answers-set)) (log-results answers-set new-game-state) ;; termination
 				  			(let [
-							  			w-next-guess (f-heuristic l-results 
-																																																	  (:found-words new-game-state))
-										;		_ (println "== w-next-guess ==") _ (clojure.pprint/pprint w-next-guess)
-
+							  			w-next-guess (f-heuristic l-results (:found-words new-game-state))
 							  			]
 							  			(recur new-game-state remaining-answers-set l-results w-next-guess))))))
 
