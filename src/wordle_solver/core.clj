@@ -270,23 +270,63 @@
   (spit "output.txt" (apply str (interpose "," (:guesses game-state))) :append true)
     (spit "output.txt" \newline :append true))
 
+
+(defn drop-indices [col indices]
+  (let [s-indices (set indices)]
+    (filter identity (map-indexed #(if ((complement s-indices) %1) %2) col))))
+
+(defn find-indices [col target]
+  (keep-indexed #(when (= %2 target) %1) col))
+
+;; game state - initial state = :round, :rounds-finished, :found-words, :guesses
+;; remaining-answers-set - initial
+;; l-results: 4x : "soare " -> {:entropy 0, :matches {22010 -> ["dacha" "dairy"}}
+;; fixed guess: (results, gamestate:foundwords) -> Word
+
+;; LOOP:Guess has been made
+;; l-response-masks: R(g,A) over all Answers set) -> 4 x '((0 0 1  0 1)...)
+;; New game state: N(state, g, masks) -> new state
+;; IF ZERO EXIT
+;; l-results: play(Guesses, guess, response-masks, results)
+  ;;; -- play-moves: for each guesss, get nwe answer set for each guess, then eval entropy.
+  ;; if l-repsonse-masks includes a 22222, drop that index from remaining-answers-set, l-results, recur
 (defn harness-run-one-trial [cached-results answers-set l-allowed-guesses f-heuristic]
 	(loop [game-state harness-initial-game-state
-				l-results cached-results
-		  	w-guess (f-heuristic l-results
+	       remaining-answers-set answers-set
+							l-results cached-results
+		 			 	w-guess (f-heuristic l-results
 																																							(:found-words game-state))]
 							(let [
-	  					l-response-masks (map (partial guess-and-answer-to-mask w-guess) answers-set)
+	  				;	_ (println "== TOP OF LOOP: Guess is ==")
+								; _ (clojure.pprint/pprint w-guess)
+
+	  					l-response-masks (map (partial guess-and-answer-to-mask w-guess) remaining-answers-set)
+	  					; _ (println "== Apply guess.  Response masks ==") _ (clojure.pprint/pprint 		l-response-masks)
+	  					
 	  					new-game-state (harness-update-game-state game-state w-guess l-response-masks)
-	  					_ (println "== NEW GAME STATE ==") _ (clojure.pprint/pprint new-game-state)
+	  					; _ (println "== NEW GAME STATE ==") _ (clojure.pprint/pprint new-game-state)
+
+	  					correct-indices (find-indices l-response-masks '(2 2 2 2 2))
+	  					; _ (println "== correct-indices ==") _ (clojure.pprint/pprint correct-indices)
+	  					
+
+	  					[l-new-results l-new-answer-lists] (play-moves l-allowed-guesses w-guess l-response-masks l-results)
+				  		l-results (drop-indices l-new-results correct-indices)
+				  		l-answer-lists (drop-indices l-new-answer-lists correct-indices)
+				  		; _ (println "== l-results after filtering ==") _ (clojure.pprint/pprint l-results)
+
+	  					remaining-answers-set (drop-indices remaining-answers-set correct-indices)
+	  					; _ (println "== remaining-answers-set ==") _ (clojure.pprint/pprint remaining-answers-set)
+
 	  					]
-					  	(if (= (count answers-set) (count (:found-words new-game-state))) (log-results answers-set new-game-state) ;; termination
-				  			(let [move-results (play-moves l-allowed-guesses w-guess l-response-masks l-results)
-											l-results (first move-results)
-	  									l-answer-lists (second move-results)
+					  	(if (zero? (count remaining-answers-set)) (log-results answers-set new-game-state) ;; termination
+				  			(let [
 							  			w-next-guess (f-heuristic l-results 
-																																																	  (:found-words new-game-state))]
-							  			(recur new-game-state l-results w-next-guess))))))
+																																																	  (:found-words new-game-state))
+										;		_ (println "== w-next-guess ==") _ (clojure.pprint/pprint w-next-guess)
+
+							  			]
+							  			(recur new-game-state remaining-answers-set l-results w-next-guess))))))
 
 
 
