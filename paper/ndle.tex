@@ -1,6 +1,6 @@
 \documentclass[11pt, oneside]{article} 	% use "amsart" instead of "article" for AMSLaTeX format
-\usepackage{geometry}  		% See geometry.pdf to learn the layout options. There are lots.
-\geometry{letterpaper}   		% ... or a4paper or a5paper or ... 
+\usepackage{geometry} 		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}  		% ... or a4paper or a5paper or ... 
 \usepackage[parfill]{parskip} 		% Activate to begin paragraphs with an empty line rather than an indent
 \usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
 								% TeX will automatically convert eps --> pdf in pdflatex		
@@ -141,7 +141,7 @@ In first part of the last example, event A was twice as likely as B as well as C
 
 $H(E) = -\sum_{i=1}^{2309} \log_2(p_i)p_i = -\sum_{i=1}^{2309} \log_2(\frac{1}{2309}) \frac{1}{2309} = \log_2(2309) = 11.173$. 
 
-This should not surprise.  If you needed to communicate a message using 128 symbols with a uniform random distribution, you would need $\log_2(128) = 7$ bits for each. The ASCII encoding is one such example.
+This should not surprise. If you needed to communicate a message using 128 symbols with a uniform random distribution, you would need $\log_2(128) = 7$ bits for each. The ASCII encoding is one such example. But here, with about 4 more bits, you can encode not just a character but all words in the Wordle answer list!
 
 If our dictionary of viable answers, filtered through learnings from previous guesses, is of size $m$, then our entropy measure of our answer set (filtered dictionary) at that point will be $\log_2(m)$, since each word is assumed equally likely. Notably, a single viable word remaining (a finished game) has entropy of $\log_2(1) = 0$. The solver's goal is to narrow its (filtered) dictionary to a single word, or, equivalently, to an event set with entropy zero.
  
@@ -223,11 +223,11 @@ The greedy algorithm for solving Wordle with answer list E and viable guess list
 \item Choose the $g$ that minimizes $H^*(E | g)$. \footnote{Should guesses see ties for lowest entropy, the algorithm should either take a deterministic stance (e.g. first alphabetical) or a fair one (random selection), depending on the goals of the investigation.}
 \end{enumerate}
 
-\subsection{Initial entropies for first guess}
+\subsection{Initial entropies for first subpuzzle solved}
 
 The starting entropies for a full dictionary of 2309 words are listed below. (Words in the answer list are in bold)
 
-Since we start at an identical state for each board (2309 words remaining), the entropies for legal first guesses below occur for all games of Wordle, as well as n-dle versions we will see shortly. \textbf{Bold} guesses indicate those in the answers list.
+Since we start at an identical state for each board (2309 words remaining), the entropies for legal first subpuzzle solvedes below occur for all games of Wordle, as well as n-dle versions we will see shortly. \textbf{Bold} guesses indicate those in the answers list.
 \begin{center}
 \begin{tabular}{ |c|c|c| }
  \hline
@@ -330,7 +330,7 @@ Since $X$ and $Y$ are independent, the entropy of their joint distribution is th
 \end{enumerate}
 \end{enumerate}
 
-Note that, because our measure $\sum_{n}H^*(E_n | g)$ is the sum of the entropy measures from Wordle (1-dle), the minimum entropy word starting from a full dictionary (\emph{soare}) also minimizes this summed entropy.  So, every simulation in this whole paper therefore opens with guess \emph{soare}.
+Note that, because our measure $\sum_{n}H^*(E_n | g)$ is the sum of the entropy measures from Wordle (1-dle), the minimum entropy word starting from a full dictionary (\emph{soare}) also minimizes this summed entropy. So, every simulation in this whole paper therefore opens with guess \emph{soare}.
 
 \section{Experimental Results for N-dle}
 For 2-dle and beyond, computing the best path through $2309^n$ possibilities quickly becomes untenable. So, for this (as well as 4-dle and 8-dle), we settle for a simulation of 10000 random board sets. 
@@ -418,7 +418,7 @@ Observations:
 \begin{itemize}
 \item All answers are solvable within N+5, with the mean around N+3, a consistent pattern so far.
 \item The distribution of guesses remains tight around the mean, though less so than our 2-dle simulation.
-\item The opener of \emph{soare, clint} accounts for nearly \emph{two} thirds of our solver's paths in 4-dle, almost double that of 2-dle.  The opener frequency graphs from here on out are dramatically long-tailed.
+\item The opener of \emph{soare, clint} accounts for nearly \emph{two} thirds of our solver's paths in 4-dle, almost double that of 2-dle. The opener frequency graphs from here on out are dramatically long-tailed.
 \item We see a lot of familiar faces among the top four openers (clint, clipt, mulct, linty), a rearrangement of the 2-dle headliners.
 \end{itemize}
 
@@ -472,7 +472,7 @@ Observations:
 
 \section{Trends and Traps}
 
-A few trends seem to emerge from these results across 1-, 2-, 4-, and 8-dle.  
+A few trends seem to emerge from these results across 1-, 2-, 4-, and 8-dle. 
 
 As N increases:
 \begin{itemize}
@@ -483,7 +483,7 @@ As N increases:
  
 However, consider the thought experiment of a 2309-word board (if chosen randomly, duplicates become a near-certainty).
 \begin{itemize}
-\item The first guess of the non-answer \emph{soare} would almost certainly be inferior to actual possible answer \emph{raise}. \emph{raise} has a 63.2 percent chance \footnote{$\approx 1- e^{-1}$} of being in the puzzle, and its shortfall of .01 bits of entropy \footnote{Although, on second look the shortfall is more like 2309 * .01 = 23 bits. Just what is eliminating a bit of entropy worth?} likely is worth less than solving an average of one sub-puzzle.
+\item The first subpuzzle solved of the non-answer \emph{soare} would almost certainly be inferior to actual possible answer \emph{raise}. \emph{raise} has a 63.2 percent chance \footnote{$\approx 1- e^{-1}$} of being in the puzzle, and its shortfall of .01 bits of entropy \footnote{Although, on second look the shortfall is more like 2309 * .01 = 23 bits. Just what is eliminating a bit of entropy worth?} likely is worth less than solving an average of one sub-puzzle.
 \item The maximum solution length (N) falls out of the definition, though 2309 unique sub-boards occur together with vanishing probability.
 \item One suspects that the average solution length would trend from N+3 (where it seems stuck so far) to far below N, the chance of a zero-entropy sub-puzzle emerging at every turn. More directly, the expected portion of the answer list represented in the boards becomes $\frac{1}{2309} \sum_1^{2309} (1 - (\frac{2309 - 1}{2309})^{2309}) \approx 1 - e^{-1} = .632$ \footnote {You again.}, in which case we're solving a 1459-dle!
 \end{itemize}
@@ -494,6 +494,201 @@ These generalizations follow from the observations, which could also be wrong fo
 \item My differences with Healy's \cite{1} results for Wordle are significant enough to raise an eyebrow. 
 \end{itemize}
 
+\section{An Alternative Algorithm: Vern's Gambit}
+
+Finally, note that the algorithm detailed here not the only strategy, nor even the only strategy relying on \emph{entropy}! Another greedy algorithm solves Wordle with answer list E and viable guess list G using entropy, but looks to minimize the minimum entropy of the unsolved sub-puzzles.  The algorithm:
+\begin{itemize}
+\item If there are no unsolved boards, exit.
+\item For each board n of N:
+ \begin{itemize}
+ \item For each $g \in G$: f
+ \begin{itemize}
+ \item For each $a$ in $E_n$, compute which response mask set $E_{n_i}$ (for example, $E_{YYGYB}$) each answer $a$ would fall into given guess $g$.
+ \item Compute $H^*(E_n | g)$, where $H^* = -100$ if $|E_n| = 1$, $H^* = 0$ if $|E_n| = 0$, else $H^* = H$ 
+ \end{itemize}
+ \item Choose the $g$ associated with the lowest entropy $H^*(E_n | g)$ in any board. 
+\end{itemize}
+\end{itemize}
+
+This algorithm, named \emph{Vern's Gambit} (or the \emph{min strategy}), greedily chases the most promising sub-puzzle (that with the minimum individual board entropy) instead of optimizing for the total entropy of the entire system as described in Section 3. The Section 3 algorithm is called the ``sum method'' from here on out.
+
+It is indistinguishable from the main algorithm in a few cases:
+\begin{itemize}
+\item When $n = 1$ (Wordle), these are exactly the same algorithm.
+\item When a board (say a single one) is solvable on the next move, the main algorithm will see a minimum total entropy\footnote{Again, $-100$ is meant to signify ``negative infinity'' and should be increased or coded more logically as needed.}  of $-100$ plus the much smaller entropies of unsolved boards. The min algorithm simply sees $-100$. Each will make the same selection.
+\end{itemize}
+
+However, the data for the min method bears out major differences:
+\begin{itemize}
+\item Exhibiting higher risk-taking (variance), the maximum number of guesses for a full puzzle greatly exceeds that of the ``sum method''.
+\item The average guess count to solve a puzzle is higher. In 2-, 4-, and 8-dle, this is about a half-guess. 
+\item When compared head-to-head (that is, on the same puzzle), the sum method appears more effective as N increases.
+\item The concentration of common openings (first two words) dilutes considerably as the individual puzzles exert a strong influence on the next move with minimum entropy.
+\item As a sanity check, the number of guesses required to find the first sub-puzzle solution (the algorithm's natural goal) appears slightly smaller with the min method. As the algorithm explicitly seeks this out, this result seems intuitive.
+\end{itemize}
+
+
+
+\subsection{2-dle under Vern's gambit}
+
+\begin{center}
+\begin{tabular}{ |c|c|c| }
+ \hline
+guesses & count & proportion \\
+ \hline
+3 & 11 & 0.0011 \\
+4 & 1296 & 0.1296 \\
+5 & 5279 & 0.5279 \\
+6 & 3171 & 0.3171 \\
+7 & 242 & 0.0242 \\
+8 & 1 & 0.0001 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\begin{figure}[!htb]
+ \centering
+ \subfloat[\centering guesses required]{{\includegraphics[scale=.33]{guess2_vern} }}%
+ \qquad
+ \subfloat[\centering frequency of openers]{{\includegraphics[scale=.33]{second2_vern}}}%
+ \caption{2-dle results on 10000 random answer sets (Vern)}%
+\end{figure}
+
+\begin{figure}[!htb]
+ \centering
+ \subfloat[\centering last subpuzzle solved]{{\includegraphics[scale=.33]{last_guess_comparison_2} }}%
+ \qquad
+ \subfloat[\centering first subpuzzle solved]{{\includegraphics[scale=.33]{first_guess_comparison_2} }}%
+ \caption{Comparison of Vern and Sum algorithms on 2-dle}%
+\end{figure}
+
+
+\begin{itemize}
+\item Expected Guess Count: 5.234 (vs. sum strategy: 4.9477)
+\item Opener 1: \emph{soare, clint} (.0955)
+\item Opener 2: \emph{soare, thilk} (.0604)
+\item Opener 3: \emph{soare, cloot} (.0358)
+\item Opener 4: \emph{soare, denet} (0.0341)
+\item Prevalence of top four openers: (0.2258). 
+\end{itemize}
+
+A few observations on this data:
+\begin{itemize}
+\item The max puzzle solution length has increased from 7 (N+5) to 8 (N+6). However, this is one sample out of 10000.  It's as likely that the sample has omitted an 8-length puzzle for the sum method.
+\item While the distribution of best openers still exhibits high skew (Fig 9b) with ``soare, clint'' as the headliner, the graph has a gentler slope. The min algorithm chooses the second move based on the best sub-puzzle it sees (higher variance) rather than the sum of the N (2) sub-puzzles.  In this method, the ``top four'', while an artificial concept in the sum method, sees no such drop thereafter.
+\item On any given puzzle, the likelihood that the min method solves 2-dle in fewer moves is about 34\% (Fig 10a). A puzzle marked ``1'' here means the min method would solve in, say, 6, while sum solved in 5.  Ties accounted for 58\%. 
+\item As a sanity check, the min method did find its \emph{first} sub-puzzle solution (only) slightly faster, as illustrated in Fib 10b. While the algorithms tied in this metric 73\% of the time, the min method solved the first sub-board 15\% of the time, as opposed to the sum method's 12\%.
+\end{itemize}
+
+
+
+
+\subsection{Quordle (4-dle) under Vern's gambit}
+
+\begin{center}
+\begin{tabular}{ |c|c|c| }
+ \hline
+guesses & count & proportion \\
+ \hline
+5 & 5	 & 0.0005 \\
+6 & 633	0.0633 \\
+7 & 3520 & 0.352 \\ 
+8 & 4246 & 0.4246 \\ 
+9 & 1466 & 0.1466 \\ 
+10 & 128 & 0.0128 \\ 
+11 & 2 & 0.0002 \\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{figure}[!htb]
+ \centering
+ \subfloat[\centering guesses required]{{\includegraphics[scale=.33]{guess4_vern}}}%
+ \qquad
+ \subfloat[\centering frequency of openers]{{\includegraphics[scale=.33]{second4_vern}}}%
+ \caption{4-dle results on 10000 random answer sets (Vern)}%
+\end{figure}
+
+\begin{figure}[!htb]
+ \centering
+ \subfloat[\centering last subpuzzle solved]{{\includegraphics[scale=.33]{last_guess_comparison_4} }}%
+ \qquad
+ \subfloat[\centering first subpuzzle solved]{{\includegraphics[scale=.33]{first_guess_comparison_4} }}%
+ \caption{Comparison of Vern and Sum algorithms on 4-dle}%
+\end{figure}
+
+
+\begin{itemize}
+\item Expected Guess Count: 7.6927 (vs. sum strategy: 7.0954)
+\item Opener 1: \emph{soare, clint} (.0446)
+\item Opener 2: \emph{soare, lemel} (.0434)
+\item Opener 3: \emph{soare, thilk} (.041)
+\item Opener 4: \emph{soare, clink} (.0262)
+\item Prevalence of top four openers: (0.1552). 
+\end{itemize}
+
+Observations:
+\begin{itemize}
+\item The right tail of solution length increases; more than 1\% of Vern's Gambit solutions exceed the legal limit of 9 (N+5) guesses for N = 4.
+\item The top three second moves have similar probability, as opposed to one dominant opening.
+\item While 41\% of the time, the sum and min methods yield the same guess count, a full 53\% see the sum method winning (Fig 12a).  
+\end{itemize}
+
+\subsection{Octordle (8-dle) under Vern's gambit}
+
+\begin{center}
+\begin{tabular}{ |c|c|c| }
+ \hline
+guesses & count & proportion \\
+ \hline
+9 & 3 & 0.00119047619 \\
+10 & 376 & 0.1492063492 \\
+11 & 941 & 0.3734126984 \\
+12 & 829 & 0.328968254 \\
+13 & 318 & 0.1261904762 \\
+14 & 43 & 0.01706349206 \\
+15 & 10 & 0.003968253968 \\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{figure}[!htb]
+ \centering
+ \subfloat[\centering guesses required]{{\includegraphics[scale=.33]{guess8_vern}}}%
+ \qquad
+ \subfloat[\centering frequency of openers]{{\includegraphics[scale=.33]{second8_vern}}}%
+ \caption{8-dle results on 5250 random answer sets (Vern)}
+\end{figure}
+
+\begin{figure}[!htb]
+ \centering
+ \subfloat[\centering last subpuzzle solved]{{\includegraphics[scale=.33]{last_guess_comparison_8} }}%
+ \qquad
+ \subfloat[\centering first subpuzzle solved]{{\includegraphics[scale=.33]{first_guess_comparison_8} }}%
+ \caption{Comparison of Vern and Sum algorithms on 8-dle}%
+\end{figure}
+
+
+\begin{itemize}
+\item Expected Guess Count: 10.9403 (vs. sum strategy: 11.51174336)
+\item Opener 1: \emph{soare, lemel} (.0651)
+\item Opener 2: \emph{soare, butch} (.0294)
+\item Opener 3: \emph{soare, thilk} (.0250)
+\item Opener 4: \emph{soare, cloud} (.0.0234)
+\item Prevalence of top four openers: (0.1429). 
+\end{itemize}
+
+Observations:
+\begin{itemize}
+\item More than 2\% of Vern's Gambit solutions exceed the limit of 13 (N+5) guesses for N = 8.
+\item The sum method beats min on 51\% of trials (Fig 14a).  
+\item The advantage of the min method (finding the first puzzle quickly) seem to diminish (or be swept into the ``tie'' category as both methods capitalize early).
+\end{itemize}
+
+
+\textbf{In summary, the sum method seems to outpace the min method in most metrics}, especially as N increases.
+
 \section{Remaining Questions}
 
 Many questions remain for me. Given the volume of armchair math written about Wordle, I can only assume others are asking (and possibly answering!) these questions also.
@@ -503,22 +698,6 @@ Many questions remain for me. Given the volume of armchair math written about Wo
 \item Mastermind, whose guess-and-answer mechanic Wordle adopted, is an entirely ``smooth'' space: every guess is legal, and every combination of ``letters'' (colors in Mastermind's case) is possible (and equally so). Would this kind of result fall out of Mastermind? Donald Knuth built a minimax-based (search) algorithm to solve Mastermind, detailed here \cite{5}. The answer to this question indicates whether our results say more about the algorithm or the dictionary.
 \item There are certainly other algorithms to solve n-dle. Healy \cite{1} mentioned looking two moves ahead and estimating the conditional entropy there (computationally expensive), as well as limiting guesses to only possible answers, both of which can perform better.
 \end{itemize}
-
-Finally, note that the algorithm detailed here not the only strategy, nor even the only strategy relying on \emph{entropy}! Another greedy algorithm solves Wordle with answer list E and viable guess list G using entropy, but looks to minimize the minimum entropy of the unsolved sub-puzzles:
-\begin{itemize}
-\item If there are no unsolved boards, exit.
-\item For each board n of N:
- \begin{itemize}
- \item For each $g \in G$: 
- \begin{itemize}
- \item For each $a$ in $E_n$, compute which response mask set $E_{n_i}$ (for example, $\{YYGYB\}$) each answer $a$ would fall into given guess $g$.
- \item Compute $H^*(E_n | g)$, where $H^* is -100$ if $|E_n| = 1$, is 0 if $|E_n| = 0$, else $H^* = H$ 
- \end{itemize}
- \item Choose the $g$ associated with the lowest entropy $H^*(E_n | g)$ in any board. 
-\end{itemize}
-\end{itemize}
-
-This algorithm, named \emph{Vern's Gambit}, may produce even better results, to be examined in future investigations, unless I get a job.
 
 \begin{thebibliography}{9}
 

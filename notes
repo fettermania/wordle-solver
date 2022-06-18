@@ -2,12 +2,13 @@
 
 ; SETUP 
 
+
 ; (def l-answers test-dict-answers)
 ; (def l-allowed-guesses test-dict-allowed-guesses)
 
+
 (def l-answers dict-answers)
 (def l-allowed-guesses dict-allowed-guesses)
-
 
 (java.time.LocalDateTime/now)
 (def r-firstmove   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores. 
@@ -15,25 +16,50 @@
 (java.time.LocalDateTime/now)
 
 
-(dotimes [n 10]
-  (let [answers-set (repeatedly 4 #(harness-generate-random-word l-answers))
+
+; (map (fn [answers-set] (
+;       (println "Answers set")
+;        (pprint answers-set)
+;        (harness-run-one-trial (repeat 2 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-global-min)
+;        twodle-answers)
+
+; SECTION: Run Simulations
+
+; NOTE - pointer or memory issue with the above.
+
+(loop [i 5640]         
+  (harness-run-one-trial 
+    (repeat 4 r-firstmove) 
+    (nth quordle-answers i)  ;; note: imported into REPL
+    l-allowed-guesses 
+    harness-select-best-guess-global-min) (recur (inc i)))
+
+(loop [i 988]         
+  (harness-run-one-trial 
+    (repeat 8 r-firstmove) 
+    (nth octordle-answers i)  ;; note: imported into REPL
+    l-allowed-guesses 
+    harness-select-best-guess-global-min) (recur (inc i)))
+
+
+
+;; Run random trials
+(dotimes [n 100]
+  (let [answers-set (repeatedly 2 #(harness-generate-random-word l-answers))
         _ (println "Answers set")
         _ (pprint answers-set)]
-        (harness-run-one-trial (repeat 4 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-summed)))
-
-;; Do all in dictionary
+        (harness-run-one-trial (repeat 2 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-global-min)))
+        
+;; Do all in dictionary (n = 1)
 (map (fn [answer] 
   (let [answers-set (repeat 1 answer)
         _ (println "Answers set")
         _ (pprint answers-set)]
-        (harness-run-one-trial (repeat 1 r-firstmove) answers-set l-allowed-guesses)
-      dict-answers)
+        (harness-run-one-trial (repeat 1 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-global-min)))
+      l-answers)
 
 
-;; Run random trials
-
-
-
+;; BELOW PLAYBOOK: Using solver manually (TODO Update)
 
 ;; INIT 
 
@@ -55,7 +81,6 @@
   (0 0 1 0 1) 
   (0 0 2 0 0) 
   (0 0 0 1 2) 
-
   (0 1 0 0 0) 
   ))
 
@@ -66,7 +91,7 @@
 
 ;; TODO check - are we done?
 
-;; make move
+;; Make Move manually
 (def move-results
   (play-moves l-allowed-guesses w-guess l-response-masks l-results))
 
@@ -86,76 +111,11 @@
 
 (println "STOP. Play move " w-guess)
 
-;; TODO Also - better strategy for endgame.  
-;;; TODO if the highest entropy is zero, only play a valid word?  (Or if tied, pick valid word)
-;;; TODO if there are only two guesses left, play one of them?
-
-; Note also - if, given guess G, you have one probability distribution P(X = x_i | G) for response mask x_i,
-; and another P(Y = y_j | G), the joint distribution P(X,Y = x_i, y_j  | G) just ends up being
-; the products P(X = x_i | G)P(Y = y_j | G).
-; 
-; To see why, consider restricting X's answer to, say, word w, which produces mask x_i.
-; Then, the probabilty that Y's ultimate answer, v, will produce mask y_j, is entirely unaffected, or P(Y = y_j | X = x_i) = P(Y = y_j).
-; Guess G produces both sets of x_i and y_j, and Y will have the same probability distribution whether restricting to a known solution v or a known solution universe x_i.  More directly, given G, X and Y are independent, and therefore, the entropy of their joint distribution is the sum of the entropies of the individual distributions.
-; 
-; This is a known result [https://en.wikipedia.org/wiki/Joint_entropy#Less_than_or_equal_to_the_sum_of_individual_entropies] but also falls out of the composition law for entropy [https://www2.math.upenn.edu/~ted/280S19/CourseNotes/Shannon'sTheorem-Math280.pdf]:
-; H(p_1,...,p_n) = H(x_1...x_M) + x_1 \cdot H(z_1,1,...,z_1,r_1) + ... + x_M \cdot H(d_M,1,...d_M,r_m)
-; since each of the H entropies on the right hand side are the entropy of Y and are equal, so 
-; H(p_1,...,p_n) = H(x_1...x_M) + (x_1 + ... + x_m)H(y_1 + ... + y,r_n) =  H(X) + H(Y)
-; For the sake of simplicity, we assume that v could equal w, or that a quordle board could have duplicate wordle solutions inside, though this is unlikely for the curated set on quordle.com.
-
-; We've argued that this indepedence is true for two words, and it seems logical that this can be extended to three, four (quordle), eight (octordle), and so on.
-
-
-; It can also be asserted that it is maximally advantageous to solve a wordle on the next move.  The algorithm can be greedy in this scenario.
-
-; TODO
-- build quordle multi-list sugar
-  - remove marked solved words in the list somehow
-- build harness
-  - [DONE] function: given word, get mask
-  - [DONE] function: given results, pick word
-- Refactor: Multi-file clojure setup
+;; SECTION: TODOs
+- Multi-file clojure setup
 
 * [WON'T DO] NOTE: If entropies are equal, should we pick the alphabetically first word to be sure of consistency?
-* [DONE] NOTE: Should ensure we pick one we haven't picked before (i.e.  that's not counted out) - could just keep them 2 2 2 2 2, to remove from answer set.  Or set answer set explicitly to empty.
 
-
-=== Paper ===
-Results : https://docs.google.com/spreadsheets/d/1HNO99xhrcCi4EJTrNlMMffcTI1JiSzPTChrrCypKt4k/edit#gid=856023958
-
-- Detail the game (wordle, quordle, octordle)
-  - For the likely reader, Wordle likely needs no introduction. As Minesweeper with a restricted solution set (an English dictionary restricted to a reduced set of five-letter words), the sharing and scarcity aspects of the game led to its viral spread, various knockoffs, and ultimate purchase by the New York Tinmes.
-  - With six guesses to determine the mystery word, each turn yields information in the form of Green, Yellow, and Black squares.  At any given slot of five:
-     - A green square indicates the guess has the correct letter in that slot.
-     - A yellow square indicates the guessed letter does not match the solution in this slot, but exists elsewhere in the solution.
-     - A black square indicates the guessed letter does not match the solution in this slot, and there are no more instances of this letter in the solution.   
-     - If the solution has five unique letters, the above rules are straightforward to interpret.
-     - If the solution has repeated letters, note that, for any letter:
-       - All yellow squares appear before all black squares.
-       - The number of green and yellow squares don't exceed the number of instances of the letter in the soluton.
-      - In the current dictionary, triple lettes include bobby, daddy, eerie, emcee, geese, melee, tepee, fluff, mamma, mammy, mummy, nanny, ninny, pappy, puppy, error, rarer, sassy, sissy, and tatty (20 words).
-  - Starting with a well-known dictionary of 2309 words (link), the player has six guesses to enter the correct word (that is, receive all greens as a response).  
-  - Again, this is just like Mastermind, except that TWO dictionaries play a large role:
-     - All answers come from the answers dictionary (TODO github link), with 2309 entires.
-     - All allowed guesses come from the guesses dictionary (TODO github link), with 129
-
-For each mask as response to SOARE,dictionary, reduce the dictionary and create the eval list.
-
-
-;; TODO
-
-(defn assume-mask [r-evals l-allowed-guesses l-mask]
-  (let [answers (play-move "soare" r-evals l-mask)
-  	   result (just-words-and-entropy (evaluate-all-moves answers l-allowed-guesses))]
-  	   result))
-
-;; TODO - out of memory a 6000 allowed guesses
-(java.time.LocalDateTime/now)
-(def r-soare r-top)
-(def all-second-moves (map (partial assume-mask r-soare (take 6000 l-allowed-guesses)) all-mask-lists))
-(def l-r-cache (zipmap all-mask-lists all-second-moves))
-(java.time.LocalDateTime/now)
-;(pprint l-r-cache)
+; Other caveats
 
 ; TODO - quordle dictionary includes "lynch!" (but wordle doesn't).  Where to find the dict?

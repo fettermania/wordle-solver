@@ -75,79 +75,11 @@ Entropy is used in a similar way to Alex Healy's treatment here: http://www.alex
 
 	$$ }  BACK TO NEXT STEP
 ### Bugs
-
-
-#### (FIXED) Major: Answers duplicated across response buckets.
-
-Example: DACHA vs. correct answer HAIRY
-;0 2 0 1 1 = [^DC]A[^DC][^HDC] includes A, H
-(correct one) -> 0 2 0 1 0 = [^DCA]A[^DCA][^HDCA][^DCA] includes H
-but hairy will show up in both sets as "matching" 
-
-Example: Guess ASSES vs. answer MASSE SHOULD yield 1 1 2 1 0, but it NOW yields 1 1 2 1 1
-1: Y - There's an A, and it's not here.
-2: Y- There's a not green S somewhere else in the puzzle
-3: G- This is an actual match
-4: Y - There's a not green E somewhere else in the puzzle
-5: B - There's no S in this spot, and there is no spot for this S.
-
-We can state: The number of S's in the answer is the number of greens plus yellows.  
-So the rule is: Grep for (has exactly Y+G S's)
-
-ASSES could also be scored against answer MASSE in two ways, then.
-10211 - the last S gets credit
-11210 - the first S gets credit - correct answer
-
-The yellows will distribute left-to-right, so the alphabetically LAST answer is the correct one for any duplicates.
-
-
-What is the actual rule?
-- A square is green if that slot has that letter.
-- A square is yellow if, removing all greens, that 
-
-====
-(FIXED) BUG 2: If the answer is PASSE, then DACHA should be 0 2 0 0 0, not that AND 0 2 0 0 1 (count of A yellows+greens should be 1, not 2)
-(FIXED) Bug 3: If the answer is BLAND, then DACHA should be 1 1 0 0 0, not 1 1 0 0 1 (by count)
-(FIXED) Bug 3a: TODO why isn't it generating 1 0 0 0 1 as well? 
-
-FOR EACH LETTER, createa  (G, Y, G)  (B), (Y B) (B Y)... list when seen.
-
-FIX 1: If spot is green, put letter in that spot in regex, add +1 to total count for that letter.
-FIX 2: If spot is yellow, filter letter out of that spot in regex, add + 1 to the total count needed for that letter.
-FIX 3: If spot is black, filter letter out of that spot in the regex.   If there are no previous [or, by rule 4, any] yellow spots with that letter for it, throw in regex as exclude from every space.  Otherwise, can't.
-FIX 4: If spot is yellow and there's a previous black for that letter, return totally empty filter.
-RESULT: 
-- Get empty flag, regex, letter -> count
-- If empty, return negative
-- Else generate letter filters, regex function, and compose all of these (order doesn't matter)
-
-This is the plan:
-- Compute regex for all: green is in, yellow or black is out for that space.  That's the regex
-- Compute total count for all.  If there's a black, it's equal.  If not, it's at least that many.  Those are the other functions.
-- Ensure no black precedes a yellow.  If so, make a null.
-- first step : get to
-{\a: (BLACK YELLOW) \b: (GREEN) }etc.
- (update (update {} \a conj 1) \a conj 2)
+j 1) \a conj 2)
 
 
 #### Cleanup: Remove redundant arguments
 - e.g. play-move
-
-#### Enhancement: Easier quordle interface
-
-
-#### Enhancement / Bug: The second win
-
-- ["drift" -100.0]
- ["dross" -100.0]
- ["whirl" -100.0]
- ["kebab" -100.0]
- ["lemel" 0.0]
- ["bayes" 0.0]
-
- even after scoring on Drift.
-
-Perhaps play move removes it from the l-answers if the record looks like ["drift" {:entropy -100, :matches {(2 2 2 2 2) ("drift")}}]?
 
 
 #### Enhancement: Speed
@@ -169,8 +101,3 @@ In easy mode, l-allowed-guesses never changes - it's always precisely the loaded
 In hard mode, l-allowed-guesses needs to respect the yellow and green (but can ignore the black) elements of the previous response, and therefore, the intersection of all previous responses.  
 
 It is possible to cull the l-allowed-guesses list to fir this.  It hasn't been implemented.
-
-#### Others
-
-- [FIXED] Filter empty results in evaluation output for readbility
-- [FIXED] Bug: An answer set with one option should make everything -100 (b/c you know the answer!)
