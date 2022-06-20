@@ -34,7 +34,7 @@
     l-allowed-guesses 
     harness-select-best-guess-global-min) (recur (inc i)))
 
-(loop [i 988]         
+(loop [i 8844]         
   (harness-run-one-trial 
     (repeat 8 r-firstmove) 
     (nth octordle-answers i)  ;; note: imported into REPL
@@ -65,12 +65,12 @@
 
 (def l-results (repeat 4 r-firstmove))
 (def game-state harness-initial-game-state)
+(def f-heuristic harness-select-best-guess-summed)
 
 (pprint (take 10 (-sum-entropies (map just-words-and-entropy l-results))))
 
-(def w-guess (harness-select-best-guess  
-  (-sum-entropies (map just-words-and-entropy l-results))
-  (:found-words game-state)))
+(def w-guess (f-heuristic l-results (:found-words game-state)))
+
 
 ; LOOP
 
@@ -78,10 +78,10 @@
 
 ;; get response masks
 (def l-response-masks '(
-  (0 0 1 0 1) 
-  (0 0 2 0 0) 
-  (0 0 0 1 2) 
-  (0 1 0 0 0) 
+  (2 2 2 2 2) 
+  (2 2 2 2 2) 
+  (0 1 1 1 0) 
+  (2 2 2 2 2) 
   ))
 
 (def game-state (harness-update-game-state game-state w-guess l-response-masks))
@@ -105,9 +105,7 @@
 
 (pprint (take 10 (-sum-entropies (map just-words-and-entropy l-results))))
 
-(def w-guess (harness-select-best-guess  
-  (-sum-entropies (map just-words-and-entropy l-results))
-  (:found-words game-state)))
+(def w-guess (f-heuristic l-results (:found-words game-state)))
 
 (println "STOP. Play move " w-guess)
 
