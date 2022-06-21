@@ -1,28 +1,118 @@
 # wordle-solver
 
-This is a REPL-based assistant to solving "easy mode" Wordle, circa early 2022.
+This is a REPL-based assistant to solving "easy mode" Wordle, as well as a small simulation harness for testing various solving heuristics.
 
+It's also usable in "n-dle", where n is any positive interger (1 = Wordle, 4 = Quordle, 8 = Octordle, etc.).
+
+The paper written to justify the use of its main heuristic (Shannon's Information Entropy) across n-dle is here: http://fettermania.com/ndle.pdf, as well as in the repository.
 
 ## Installation
 
-Download from http://example.com/FIXME.
+Download from http://github.com/fettermania/wordle-solver.
 
-## Usage: Startup
-
-Edit dictionary of allowed guesses at wordle-allowed-guesses.txt.
-Edit dictionary of possible answers at wordle-answers.txt
+cd to that directory, then 
 
     $ lein repl
 
-## Usage: Loading the dictionaries
+## Usage
 
-Edit dictionary of allowed guesses at wordle-allowed-guesses.txt.
-Edit dictionary of possible answers at wordle-answers.txt
+Usage is mostly shown by example in the "notes" file.
 
-    $ lein repl
+### Usage: Loading the initial state.
+
+If needed, edit dictionary of allowed guesses at wordle-allowed-guesses.txt.
+If needed, edit dictionary of possible answers at wordle-answers.txt
+
+Load these dictionaries
+
+	$ (def l-answers dict-answers)
+	$ (def l-allowed-guesses dict-allowed-guesses)
+
+Then, since our solver is determinstic, the evaluation of the first move can be cached immediately before 
+doing any simulations or making our first guess on a blank board.
+
+	$ (def r-firstmove   (evaluate-all-moves l-answers l-allowed-guesses)) 
+
+This produces a map evaluating each next move on a single board, of the form:
+
+	$ ["aahed" ;; guess
+	$ 	{:entropy 7.78318320736531353, ;; entropy of this guess
+	$    :matches ;; map of response masks (0 = black, 1 = yellow, 2 = green) to answer lists
+	$      {(2 0 2 2 0) ("ashen"),
+	$        (2 0 2 0 0) ("abhor"),
+	$        (1 2 0 2 1) ("cadet" "laden"),
+	$		 ;; ...
+	$ 	   }}
+	$ ;; ...
 
 
-## Usage: (Optional) Using pattern-matching to limit the dictionary.
+### Usage: Solving a puzzle in n-dle
+
+Detailed in the "notes" file, we generate our options before our first move:
+
+	$ (def l-results (repeat 4 r-firstmove)) ;; set up our best guess for N (= 4) boards
+	$ (def game-state harness-initial-game-state) ;; used primarily for simulations
+	$ (def f-heuristic harness-select-best-guess-summed) ;; or select harness-select-best-guess-min (see paper)
+	$ (pprint (take 10 (-sum-entropies (map just-words-and-entropy l-results)))) ;; a glimpse
+	$ (def w-guess (f-heuristic l-results (:found-words game-state))) ;; make first guess
+
+Then, for each move on, say, quordle.com, enter in 0 (black), 1 (yellow) or (2) from the boards
+in l-response-masks, and run the remainder as copy-paste.
+
+	$ (def l-response-masks '(
+	$   (2 2 2 2 2) 
+	$   (2 2 2 2 2) 
+	$   (0 1 1 1 0) 
+	$   (2 2 2 2 2) 
+	$   ))
+	$ 
+	$ (def game-state (harness-update-game-state game-state w-guess l-response-masks))
+	$ 
+	$ (println "New game state ")
+	$ (pprint game-state)
+	$ 
+	$ ;; Make Move manually
+	$ (def move-results
+	$   (play-moves l-allowed-guesses w-guess l-response-masks l-results))
+	$ 
+	$ (def l-results (first move-results))
+	$ (def l-answer-lists (second move-results))
+	$ 
+	$ (pprint
+	$   (map list
+	$      (map first l-results)
+	$      l-answer-lists))
+	$ 
+	$ (pprint (take 10 (-sum-entropies (map just-words-and-entropy l-results))))
+	$ 
+	$ (def w-guess (f-heuristic l-results (:found-words game-state)))
+	$ 
+	$ (println "STOP. Play move " w-guess)
+
+
+### Usage: Running simulations
+
+Example: Run over all in in dictionary for Wordle (1-dle) using global min heuristic.
+
+	$ (map (fn [answer] 
+	$   (let [answers-set (repeat 1 answer)
+	$         _ (println "Answers set")
+	$         _ (pprint answers-set)]
+	$         (harness-run-one-trial (repeat 1 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-global-min)))
+	$       l-answers)
+
+
+Example: Do 100 random trials for 2-dle using global min heuristic.
+
+	$ (dotimes [n 100]
+	$   (let [answers-set (repeatedly 2 #(harness-generate-random-word l-answers))
+	$         _ (println "Answers set")
+	$         _ (pprint answers-set)]
+	$         (harness-run-one-trial (repeat 2 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-global-min)))
+
+Note: The harness always logs output to "./output.txt"
+
+### Usage: (Optional) Using pattern-matching to limit the dictionary.
 
 Sometimes you maty see friends' solutions *before* you solve, which can give the enterprising Wordle shark extra information.
 
@@ -49,55 +139,23 @@ You can combine several word lists (sequneces of word strings) with
 e.g. 
 	$ (intersect-blocks '("agave" "grape" "sugar") '("grape" "green" "agave") ;; yields '("agave" "grape")
 
-## Usage: Generating the next best guess
+## Enchancements (TODOs)
 
-Entropy is used in a similar way to Alex Healy's treatment here: http://www.alexhealy.net/papers/wordle.pdf.
+### Multi-file clojure setup
 
-	$ ;; DO ONCE ON INIT
-	$	(def l-answers dict-answers)
-	$	(def l-allowed-guesses dict-allowed-guesses)
-	$	(def r-top   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes 10-15 minutes.
-	$	(def r-evals r-top)
+core.clj is the only file and namespace.  This could be cleaner.  Also, not hardcoding "output.txt".
 
-	$$ ;; FOR ANY GIVEN STEP {
-  	%% (evaluate-all-moves l-answers l-allowed-guesses)
-    $$ (def r-evals *1)
-  	$$ (pprint (take 10 (just-words-and-entropy r-evals)))
+### Clearer tie-breaking
 
- 	$$ (pprint (take 10 (viable-answer-words l-answers r-evals)))
+If entropies are equal, should we pick the alphabetically first word to be sure of consistency?  
+Or pick randomly to represent the probability distribution accurately?
+Right now, this relies on the Clojure (JVM?) sort hashing to break ties.
 
-  	$$ ;; MAKE YOUR CHOICE
-	$$ (def w-word "cleat")
-	$$ (def response-mask '(0 0 2 2 0))
-
-	$$ (play-move r-evals w-word response-mask)
-	$$ (def l-answers *1)
-
-	$$ }  BACK TO NEXT STEP
-### Bugs
-j 1) \a conj 2)
-
-
-#### Cleanup: Remove redundant arguments
-- e.g. play-move
-
-
-#### Enhancement: Speed
-
-- Big: Even a trivial action (e.g. size one dictionary) takes minutes to do 13000 times.  13000 guess options times 243 (3^5) is 3M custom functions built and applied.
-- Memoization?
-- Are there any guesses we can eliminate as providing NO information?  Probably not!
-- Faster tight loop functions?
-- [DONE] pmap instead of map - improves initial run from 148 minutes to 18 minutes (1/8th the time, which checks out with an 8-core M1)
-
-#### Enhancement: When to guess
-
-- See endgame-trubs
-
-#### Enhancement: Build hard mode in
+### Enhancement: Build hard mode in
 
 The difference between hard mode and easy mode is exactly what should go in "l-allowed-guesses".
 In easy mode, l-allowed-guesses never changes - it's always precisely the loaded allowed guess dictionary.
 In hard mode, l-allowed-guesses needs to respect the yellow and green (but can ignore the black) elements of the previous response, and therefore, the intersection of all previous responses.  
 
-It is possible to cull the l-allowed-guesses list to fir this.  It hasn't been implemented.
+It is possible to set l-allowed-guesses to l-answers (or, more specifically, the subset that hasn't been eliminated).  It hasn't been implemented.
+

@@ -123,11 +123,13 @@
    (let [
   			matching-words (group-by (partial guess-and-answer-to-mask w-guess) dict-answers)
         total-words (count dict-answers)
-       
         n-entropy (cond 
         							(= 0 total-words) 
         							  0 ;; an error state - should not get here unless dict-answers empty
         							(and 
+        										 ;; NOTE: could probably short-circuit here with just (= 1 total-words)
+        										 ;; There should only be one bucket (specifically, '(2 2 2 2 2)) 
+        										 ;; if the dictionary count is 1.
         							  	(= 1 total-words) 
         								  (-results-match-single-word? w-guess (vals matching-words)))
       							    -100 ;; NOTE: A match! 

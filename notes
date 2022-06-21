@@ -1,40 +1,29 @@
-;; USAGE
 
-; SETUP 
-
-
-; (def l-answers test-dict-answers)
-; (def l-allowed-guesses test-dict-allowed-guesses)
-
+;; INITIALIZATION
 
 (def l-answers dict-answers)
 (def l-allowed-guesses dict-allowed-guesses)
 
-(java.time.LocalDateTime/now)
-(def r-firstmove   (evaluate-all-moves l-answers l-allowed-guesses)) ;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores. 
+;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores. 
 ; UPDATE  - takes 47 seconds with the new group-by style
-(java.time.LocalDateTime/now)
+(def r-firstmove   (evaluate-all-moves l-answers l-allowed-guesses)) 
 
 
-
-; (map (fn [answers-set] (
-;       (println "Answers set")
-;        (pprint answers-set)
-;        (harness-run-one-trial (repeat 2 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-global-min)
-;        twodle-answers)
-
-; SECTION: Run Simulations
+;; SECTION: Run Simulations
 
 ; NOTE - pointer or memory issue with the above.
 
-(loop [i 5640]         
+;; Example - run over pre-generated answer sets for Quordle
+
+(loop [i 0]         
   (harness-run-one-trial 
     (repeat 4 r-firstmove) 
     (nth quordle-answers i)  ;; note: imported into REPL
     l-allowed-guesses 
     harness-select-best-guess-global-min) (recur (inc i)))
 
-(loop [i 8844]         
+;; Example - run over pre-generated answer sets for Octordle
+(loop [i 0]         
   (harness-run-one-trial 
     (repeat 8 r-firstmove) 
     (nth octordle-answers i)  ;; note: imported into REPL
@@ -43,14 +32,14 @@
 
 
 
-;; Run random trials
+;; Example: Do 100 random trials for 2-dle
 (dotimes [n 100]
   (let [answers-set (repeatedly 2 #(harness-generate-random-word l-answers))
         _ (println "Answers set")
         _ (pprint answers-set)]
         (harness-run-one-trial (repeat 2 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-global-min)))
         
-;; Do all in dictionary (n = 1)
+;; Example: Do all in dictionary for Wordle (1-dle)
 (map (fn [answer] 
   (let [answers-set (repeat 1 answer)
         _ (println "Answers set")
@@ -59,10 +48,9 @@
       l-answers)
 
 
-;; BELOW PLAYBOOK: Using solver manually (TODO Update)
+;; BELOW PLAYBOOK: Using solver manually in REPL to solve daily puzzle
 
-;; INIT 
-
+;; INITIALIZING 
 (def l-results (repeat 4 r-firstmove))
 (def game-state harness-initial-game-state)
 (def f-heuristic harness-select-best-guess-summed)
@@ -71,12 +59,11 @@
 
 (def w-guess (f-heuristic l-results (:found-words game-state)))
 
-
-; LOOP
-
 (println "STOP. Play move " w-guess)
 
-;; get response masks
+; LOOP until solved
+
+;; Fill in response masks here.
 (def l-response-masks '(
   (2 2 2 2 2) 
   (2 2 2 2 2) 
@@ -88,8 +75,6 @@
 
 (println "New game state ")
 (pprint game-state)
-
-;; TODO check - are we done?
 
 ;; Make Move manually
 (def move-results
@@ -109,11 +94,4 @@
 
 (println "STOP. Play move " w-guess)
 
-;; SECTION: TODOs
-- Multi-file clojure setup
-
-* [WON'T DO] NOTE: If entropies are equal, should we pick the alphabetically first word to be sure of consistency?
-
-; Other caveats
-
-; TODO - quordle dictionary includes "lynch!" (but wordle doesn't).  Where to find the dict?
+;; Return to LOOP
