@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2021.11.4)  17 JUN 2022 23:37
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2021.11.4)  21 JUN 2022 08:36
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -993,95 +993,90 @@ File: ./images//second8.png Graphic file (type png)
 Package pdftex.def Info: ./images//second8.png  used on input line 438.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
  [14 <./images//octordle.png>] [15 <./images//guess8.png> <./images//second8.pn
-g>]
-
-LaTeX Warning: Citation '1' on page 16 undefined on input line 493.
-
-[16] [17]
+g>] [16] [17]
 <./images//guess2_vern.png, id=108, 602.25pt x 372.39125pt>
 File: ./images//guess2_vern.png Graphic file (type png)
 <use ./images//guess2_vern.png>
-Package pdftex.def Info: ./images//guess2_vern.png  used on input line 551.
+Package pdftex.def Info: ./images//guess2_vern.png  used on input line 547.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
 <./images//second2_vern.png, id=109, 602.25pt x 372.39125pt>
 File: ./images//second2_vern.png Graphic file (type png)
 <use ./images//second2_vern.png>
-Package pdftex.def Info: ./images//second2_vern.png  used on input line 553.
+Package pdftex.def Info: ./images//second2_vern.png  used on input line 549.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
 <./images//last_guess_comparison_2.png, id=110, 602.25pt x 372.39125pt>
 File: ./images//last_guess_comparison_2.png Graphic file (type png)
 <use ./images//last_guess_comparison_2.png>
 Package pdftex.def Info: ./images//last_guess_comparison_2.png  used on input l
-ine 559.
+ine 555.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
 <./images//first_guess_comparison_2.png, id=111, 602.25pt x 372.39125pt>
 File: ./images//first_guess_comparison_2.png Graphic file (type png)
 <use ./images//first_guess_comparison_2.png>
 Package pdftex.def Info: ./images//first_guess_comparison_2.png  used on input 
-line 561.
+line 557.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
  [18 <./images//guess2_vern.png> <./images//second2_vern.png> <./images//last_g
 uess_comparison_2.png> <./images//first_guess_comparison_2.png>]
 <./images//guess4_vern.png, id=119, 602.25pt x 372.39125pt>
 File: ./images//guess4_vern.png Graphic file (type png)
 <use ./images//guess4_vern.png>
-Package pdftex.def Info: ./images//guess4_vern.png  used on input line 606.
+Package pdftex.def Info: ./images//guess4_vern.png  used on input line 602.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
 <./images//second4_vern.png, id=120, 602.25pt x 372.39125pt>
 File: ./images//second4_vern.png Graphic file (type png)
 <use ./images//second4_vern.png>
-Package pdftex.def Info: ./images//second4_vern.png  used on input line 608.
+Package pdftex.def Info: ./images//second4_vern.png  used on input line 604.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
 <./images//last_guess_comparison_4.png, id=121, 602.25pt x 372.39125pt>
 File: ./images//last_guess_comparison_4.png Graphic file (type png)
 <use ./images//last_guess_comparison_4.png>
 Package pdftex.def Info: ./images//last_guess_comparison_4.png  used on input l
-ine 614.
+ine 610.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
 <./images//first_guess_comparison_4.png, id=122, 602.25pt x 372.39125pt>
 File: ./images//first_guess_comparison_4.png Graphic file (type png)
 <use ./images//first_guess_comparison_4.png>
 Package pdftex.def Info: ./images//first_guess_comparison_4.png  used on input 
-line 616.
+line 612.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
-
-[19] [20 <./images//guess4_vern.png> <./images//second4_vern.png> <./images//la
-st_guess_comparison_4.png> <./images//first_guess_comparison_4.png>]
+ [19] [20 <./images//guess4_vern.png> <./images//second4_vern.png> <./images//l
+ast_guess_comparison_4.png> <./images//first_guess_comparison_4.png>]
 <./images//guess8_vern.png, id=134, 602.25pt x 372.39125pt>
 File: ./images//guess8_vern.png Graphic file (type png)
 <use ./images//guess8_vern.png>
-Package pdftex.def Info: ./images//guess8_vern.png  used on input line 657.
+Package pdftex.def Info: ./images//guess8_vern.png  used on input line 654.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
 <./images//second8_vern.png, id=135, 602.25pt x 372.39125pt>
 File: ./images//second8_vern.png Graphic file (type png)
 <use ./images//second8_vern.png>
-Package pdftex.def Info: ./images//second8_vern.png  used on input line 659.
+Package pdftex.def Info: ./images//second8_vern.png  used on input line 656.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
 <./images//last_guess_comparison_8.png, id=136, 602.25pt x 372.39125pt>
 File: ./images//last_guess_comparison_8.png Graphic file (type png)
 <use ./images//last_guess_comparison_8.png>
 Package pdftex.def Info: ./images//last_guess_comparison_8.png  used on input l
-ine 665.
+ine 662.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
 <./images//first_guess_comparison_8.png, id=137, 602.25pt x 372.39125pt>
 File: ./images//first_guess_comparison_8.png Graphic file (type png)
 <use ./images//first_guess_comparison_8.png>
 Package pdftex.def Info: ./images//first_guess_comparison_8.png  used on input 
-line 667.
+line 664.
 (pdftex.def)             Requested size: 198.7431pt x 122.88948pt.
  [21 <./images//guess8_vern.png> <./images//second8_vern.png> <./images//last_g
 uess_comparison_8.png> <./images//first_guess_comparison_8.png>]
 
-LaTeX Warning: Citation '5' on page 22 undefined on input line 697.
+LaTeX Warning: Citation '5' on page 22 undefined on input line 694.
 
 
-Overfull \hbox (12.07172pt too wide) in paragraph at lines 697--698
+Overfull \hbox (12.07172pt too wide) in paragraph at lines 694--695
 []\OT1/cmr/m/n/10.95 Mastermind, whose guess-and-answer me-chanic Wor-dle adopt
 ed, is an en-tirely ``smooth''
  []
 
 
-LaTeX Warning: Citation '1' on page 22 undefined on input line 698.
+LaTeX Warning: Citation '1' on page 22 undefined on input line 695.
 
 [22] [23] (./ndle.aux)
 
@@ -1129,7 +1124,7 @@ t/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2021/texmf-dist
 /fonts/type1/public/amsfonts/cm/cmtt9.pfb></usr/local/texlive/2021/texmf-dist/f
 onts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2021/texmf-di
 st/fonts/type1/public/cm-super/sfrm1095.pfb>
-Output written on ndle.pdf (23 pages, 1353280 bytes).
+Output written on ndle.pdf (23 pages, 1353614 bytes).
 PDF statistics:
  228 PDF objects out of 1000 (max. 8388607)
  129 compressed objects within 2 object streams

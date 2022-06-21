@@ -2352,9 +2352,8 @@
     <bcf:citekey order="7">1</bcf:citekey>
     <bcf:citekey order="8">1</bcf:citekey>
     <bcf:citekey order="9">3</bcf:citekey>
-    <bcf:citekey order="10">1</bcf:citekey>
-    <bcf:citekey order="11">5</bcf:citekey>
-    <bcf:citekey order="12">1</bcf:citekey>
+    <bcf:citekey order="10">5</bcf:citekey>
+    <bcf:citekey order="11">1</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="anyt">

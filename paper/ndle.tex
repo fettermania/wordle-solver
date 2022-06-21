@@ -284,7 +284,7 @@ guesses & count & proportion \\
 \item Prevalence of top four openers \footnote{Four chosen somewhat arbitrarily, but where the curve bends strongly.} openers: (0.3347769597)
 \end{itemize}
 
-These results are very similar to Healy's results on a dictionary of 2315 \cite{1}, with some moderate differences (bugs of mine?). Of note is that all words are solvable in six guesses (the maximum allowed for the game), the average word takes about 4 guesses to pin down, and the top four second guess (post-\emph{soare}) words only constitute about a third of the optimal plays. We will revisit these numbers later.
+These results are very similar to Healy's results on a dictionary of 2315 \cite{1}, with some moderate differences \footnote{On correspondence, Healy has a better strategy for favoring dictionary guesses on ties}. Of note is that all words are solvable in six guesses (the maximum allowed for the game), the average word takes about 4 guesses to pin down, and the top four second guess (post-\emph{soare}) words only constitute about a third of the optimal plays. We will revisit these numbers later.
 
 \subsection{Entropy advantages}
 
@@ -487,11 +487,7 @@ However, consider the thought experiment of a 2309-word board (if chosen randoml
 \item One suspects that the average solution length would trend from N+3 (where it seems stuck so far) to far below N, the chance of a zero-entropy sub-puzzle emerging at every turn. More directly, the expected portion of the answer list represented in the boards becomes $\frac{1}{2309} \sum_1^{2309} (1 - (\frac{2309 - 1}{2309})^{2309}) \approx 1 - e^{-1} = .632$ \footnote {You again.}, in which case we're solving a 1459-dle!
 \end{itemize}
 
-These generalizations follow from the observations, which could also be wrong for a few reasons:
-\begin{itemize}
-\item I broke entropy ties arbitrarily, using the internal sorting of Clojure (or possibly JVM). Ties really should have been broken randomly (for estimating mean) or, say, alphabetically (for cataloguing ``best words''). However, this whole paper remains an exploration of just one algorithm among many anyway.
-\item My differences with Healy's \cite{1} results for Wordle are significant enough to raise an eyebrow. 
-\end{itemize}
+These generalizations follow from the observations, which could also be wrong as I broke entropy ties arbitrarily, using the internal sorting of Clojure (or possibly JVM). Ties really should have been broken randomly (for estimating mean) or, say, alphabetically (for cataloguing ``best words''). However, this whole paper remains an exploration of just one algorithm among many anyway.
 
 \section{An Alternative Algorithm: Vern's Gambit}
 
