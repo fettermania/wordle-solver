@@ -28,7 +28,7 @@
     (repeat 8 r-firstmove) 
     (nth octordle-answers i)  ;; note: imported into REPL
     l-allowed-guesses 
-    harness-select-best-guess-global-min) (recur (inc i)))
+    harness-select-best-guex0ss-global-min) (recur (inc i)))
 
 
 

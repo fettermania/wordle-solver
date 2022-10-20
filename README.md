@@ -33,18 +33,18 @@ doing any simulations or making our first guess on a blank board.
 
 	$ (def r-firstmove   (evaluate-all-moves l-answers l-allowed-guesses)) 
 
-This produces a map evaluating each next move on a single board, of the form:
+This produces an list of moves of increasing entropy of the form:
 
-	$ ["aahed" ;; guess
-	$ 	{:entropy 7.78318320736531353, ;; entropy of this guess
-	$    :matches ;; map of response masks (0 = black, 1 = yellow, 2 = green) to answer lists
-	$      {(2 0 2 2 0) ("ashen"),
-	$        (2 0 2 0 0) ("abhor"),
-	$        (1 2 0 2 1) ("cadet" "laden"),
-	$		 ;; ...
-	$ 	   }}
-	$ ;; ...
-
+     $ ["soare" ;; the guess
+     $ 	   {:entropy 5.287849713481362, ;; entropy over the result possibilities
+     $	   :matches {
+     $	   	    (2 0 2 2 0) ["scarf" "scary" "shard" "shark" ;; ...
+     $	   	    (2 0 2 0 0) ["scald" "scalp" "scaly" "scamp" ;; ...
+     $		    }}]
+     $	["roate" {:entropy 5.288196144042106 ;; ...
+     	  ]
+     $    ;; ...
+     $	   
 
 ### Usage: Solving a puzzle in n-dle
 
@@ -141,15 +141,39 @@ e.g.
 
 ## Enchancements (TODOs)
 
+### Notes for presenation
+
+- lemel
+- -100
+- what to do with dead words?
+- tiebreaking
+- pmap
+- Clojure 1.8?
+- Emacs
+  - Note: Can't upgrade cider?
+  - C-c M-j cider-jack-in
+  - C-x C-e execute last
+  - C-c C-k compile
+  - Many commands don't work
+  - C-M M-n M-n namespace set
+  
+### Fragility to errors
+
+If something's entered incorrectly, you will end up in the "I don't know, lemel" case quickly.
+
 ### Multi-file clojure setup
 
-core.clj is the only file and namespace.  This could be cleaner.  Also, not hardcoding "output.txt".
+core.clj is the only file and namespace.  This could be cleaner.  Also, not hardcoding "output.txt".  Prerequisite for a Seajure presentation.
+
+Could also relearn Clojure+Emacs for a Seajure presentation.
 
 ### Clearer tie-breaking
 
 If entropies are equal, should we pick the alphabetically first word to be sure of consistency?  
 Or pick randomly to represent the probability distribution accurately?
 Right now, this relies on the Clojure (JVM?) sort hashing to break ties.
+
+Note: Alex Healy's implementation does break what I consider ties first by preferring words in the answer key.
 
 ### Enhancement: Build hard mode in
 
