@@ -103,6 +103,7 @@
      [g {:entropy 0 :matches {}}]) l-allowed-guesses))
 
 
+;; TODO - This generates the move's row in l-results
 ;; NOTE: l-answers empty returns all 0, no matches
 ;; Also note - this one won't have keys for masks with no matching answers
 (defn evaluate-move [l-answers w-guess]
@@ -128,32 +129,38 @@
     {:entropy n-entropy
      :matches matching-words}))
 
-
+;; Call evaluate-move on every possible guess to 
+;;   get l-result row for every l-allowed-guess.
+;; Sort by entropy (ascending) and return
 (defn evaluate-all-moves [l-answers l-allowed-guesses]
   ;; NOTE - this is just for convenience.  The harness shouldn't allow for
   ;; any empty result sets.
   (if (empty? l-answers) (generate-empty-eval l-allowed-guesses)
     (let [results (zipmap
-           l-allowed-guesses
-           (pmap (partial evaluate-move l-answers)
-                l-allowed-guesses))
-       		 sorted-results (sort
-						                #(< (:entropy (second %1)) (:entropy (second %2)))
-						                results)]
+                   l-allowed-guesses
+                   (pmap (partial evaluate-move l-answers)
+                         l-allowed-guesses))
+       	  sorted-results (sort #(< (:entropy (second %1))
+                                   (:entropy (second %2))) results)]
     		sorted-results)))
 
-; NOTE - there's probably a better way to clean out empties from the visual print
+;; NOTE - there's probably a better way to clean out empties from the
+;;  visual print
+;; TODO - this may be moot now.  Remove? 
 (defn clean-results-row [r-row]
   (let [mymap (:matches (second r-row))]
     [(first r-row)
       {
         :entropy (:entropy (second r-row))
-        :matches (select-keys mymap (for [[k v] mymap :when (not (empty? v))] k))
+       :matches (select-keys mymap (for [[k v] mymap
+                                         :when (not (empty? v))] k))
       }]))
 
 
 ;; takes result type (["guess" {:entropy 1.23 :matches {(1 0 0 0 0) ("right" "wrong")] ... )
 ;; returns a single row of type: ["guess" {:entropy 1.23 :matches {(1 0 0 0 0) ("right" "wrong")]
+;; TODO Perhaps result type should be a map (sorted map?), since this just
+;; searches for the *one row* we know should be there.
 (defn extract-row-from-results [r str-word]
   (first (filter #(= str-word (first %)) r)))
 
@@ -181,13 +188,14 @@
   (if (nil? r) '() r))
 ;; finds the possible result set remaining after playing a guess.
 ;; extracts from pre-generated result types.
+;; returns a list of possible answers when playing the guess.
 ;; TODO - this doesn't use the first two arguments.  It requires r-evals to be current.
+;; TODO - this extracts the w-guess row from the already-evaluated r-evals
 (defn play-move [w-guess r-evals l-mask]
   (let [entry (extract-row-from-results r-evals w-guess)] 
     (if (nil? entry) nil
         (-> entry second :matches (get l-mask) -nil-to-empty))))
 
-;; SECITION: Quordle time
 (defn result-set-to-map [l-result-set]
   (zipmap (map first l-result-set)
                 (map (comp second second) l-result-set)))
@@ -199,12 +207,13 @@
 			  sorted-results))
 
 ;; TODO Consider returning answer lists for debugging
-(defn play-moves [l-allowed-guesses w-word l-responses l-results]
+(defn play-moves [l-allowed-guesses w-word l-response-masks l-results]
   (let [l-new-answer-lists (map 
                              (partial play-move w-word) 
                              l-results 
-                             l-responses)
-        l-new-result-sets (map #(evaluate-all-moves % l-allowed-guesses) l-new-answer-lists)
+                             l-response-masks)
+        l-new-result-sets (map #(evaluate-all-moves % l-allowed-guesses)
+                               l-new-answer-lists)
   ]
   (list 
      l-new-result-sets

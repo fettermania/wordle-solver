@@ -1,4 +1,27 @@
 
+;;
+(require '[wordle-solver.interactive :as interactive])
+(require '[wordle-solver.harness :as harness])
+
+(def r-firstmove (interactive/evaluate-first-move))
+
+(def ndle-state  (interactive/initialize-ndle-state 4 harness/harness-select-best-guess-summed r-firstmove))
+
+;; TODO - what happens after the word is found?  Should you leave 2 2 2 2 2 up or what?
+;; NOTE - if you don't update this correctly (including the word),
+;;   you end up with garbage l-results (see "lemel")
+(def ndle-state 
+ (interactive/record-guess-results ndle-state "halve" 
+   '(
+      (0 0 0 0 0) 
+      (0 0 0 0 0) 
+      (0 1 1 0 0) 
+      (2 2 2 2 2) 
+    )))
+
+(interactive/examine-next-move ndle-state)
+
+
 ;; INITIALIZATION
 
 (def l-answers dict-answers)
@@ -28,7 +51,7 @@
     (repeat 8 r-firstmove) 
     (nth octordle-answers i)  ;; note: imported into REPL
     l-allowed-guesses 
-    harness-select-best-guex0ss-global-min) (recur (inc i)))
+    harness-select-best-guess-global-min) (recur (inc i)))
 
 
 
@@ -44,8 +67,8 @@
   (let [answers-set (repeat 1 answer)
         _ (println "Answers set")
         _ (pprint answers-set)]
-        (harness-run-one-trial (repeat 1 r-firstmove) answers-set l-allowed-guesses harness-select-best-guess-global-min)))
-      l-answers)
+        (harness/harness-run-one-trial (repeat 1 r-firstmove) data/dict-answers data/dict-allowed-guesses harness/harness-select-best-guess-global-min)))
+      (take 1 data/dict-answers))
 
 
 ;; BELOW PLAYBOOK: Using solver manually in REPL to solve daily puzzle

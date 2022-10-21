@@ -1,6 +1,7 @@
 (ns wordle-solver.boneyard
   (:gen-class))
 
+(require '[wordle-solver.core :as core])
 (require '[clojure.string :as str])
 (require '[clojure.set])
 
@@ -28,15 +29,15 @@
                 (map str yellow-list)))))
 
 (defn _generate-regex-entry [black-list mask-elt word-elt]
-  (cond (= mask-elt GREEN) word-elt
-        (= mask-elt YELLOW) (apply str "[^" black-list word-elt "]")
+  (cond (= mask-elt core/GREEN) word-elt
+        (= mask-elt core/YELLOW) (apply str "[^" black-list word-elt "]")
         :else   (apply str "[^" black-list "]")))
 
 (defn old-filter-fn-from-mask-list-and-word [w-word mask-list]
   (let [seq-word (seq w-word)
-        black-list (apply-mask-to-word mask-list seq-word BLACK)
-        yellow-list (apply-mask-to-word mask-list seq-word  YELLOW)
-        green-list (apply-mask-to-word mask-list seq-word GREEN)
+        black-list (core/apply-mask-to-word mask-list seq-word core/BLACK)
+        yellow-list (core/apply-mask-to-word mask-list seq-word  core/YELLOW)
+        green-list (core/apply-mask-to-word mask-list seq-word core/GREEN)
         regex-str (apply str
                          (map (partial _generate-regex-entry (apply str black-list))
                               mask-list w-word))
@@ -119,7 +120,7 @@
    (apply str
      (map 
        (fn [w m]
-         (if (= m GREEN) w (str "[^" w "]")))
+         (if (= m core/GREEN) w (str "[^" w "]")))
    		w-word
    		mask-list)))
 
@@ -242,12 +243,12 @@
         							  0 ;; an error state - should not get here unless dict-answers empty
         							(and 
         							  	(= 1 total-words) 
-        								  (-results-match-single-word? w-word matching-words))
+        								  (core/-results-match-single-word? w-word matching-words))
       							    -100 ;; NOTE: A match! 
       							  :else 
 											  (/
 													(apply +
-		               (map calculate-entropy-numerator
+		               (map core/calculate-entropy-numerator
 		                    matching-words))
 												total-words))]
     {:entropy n-entropy
@@ -256,7 +257,7 @@
 
 
 (defn old-evaluate-all-moves [l-answers l-allowed-guesses]
-  (let [all-mask-lists (generate-all-mask-lists 5)
+  (let [all-mask-lists (core/generate-all-mask-lists 5)
         results (zipmap
                  l-allowed-guesses
                  (pmap (partial old-evaluate-move all-mask-lists l-answers)

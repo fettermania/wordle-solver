@@ -98,10 +98,11 @@
 
 ;; Note - can use this as either "run over all answers" (1-dle), or "run over this test set"
 
+;; TODO NOTE - vern's gambit
 ;; Example - run over pre-generated answer sets for Octordle
 ;; (harness-run-over-all-in-list
-;;   l-answers l-allowed-guesses 8 r-firstmove
-;;   harness-select-best-guess-global-min)
+;;   l-answers l-allowed-guesses 1 r-firstmove
+;;   harness-select-best-guess-summed)
 (defn harness-run-over-all-in-list [l-answer-set l-allowed-guesses board-size
                                     r-firstmove f-heuristic]
   (map (fn [answer]
