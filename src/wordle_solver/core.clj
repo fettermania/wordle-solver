@@ -1,24 +1,11 @@
 ; (Use 'wordle-solver.core :reload) ;; LAZY RELOAD
-
 (ns wordle-solver.core
   (:gen-class))
 
+(require '[wordle-solver.data :as data])
 (require '[clojure.string :as str])
-(require '[clojure.set])
 (require '[clojure.pprint])
 
-;; LOAD 
-(def answers-filename "wordle-answers.txt")
-(def allowed-guesses-filename "wordle-allowed-guesses.txt")
-
-(def dict-answers (str/split (slurp answers-filename) #"\n"))
-(def dict-allowed-guesses (str/split (slurp allowed-guesses-filename) #"\n"))
-
-(def test-answers-filename "test-wordle-answers.txt")
-(def test-allowed-guesses-filename "test-wordle-allowed-guesses.txt")
-
-(def test-dict-answers (str/split (slurp test-answers-filename) #"\n"))
-(def test-dict-allowed-guesses (str/split (slurp test-allowed-guesses-filename) #"\n"))
 
 ;; SECTION: CORE
 
@@ -43,8 +30,6 @@
 (defn apply-mask-to-word [mask-list seq-word val]
   (filter identity (map #(if (= val %1) %2) mask-list seq-word)))
 
-
-
 (defn calculate-entropy-numerator [result-set]
   (let [c (count result-set)]
     (if (= 0 c) 
@@ -59,7 +44,7 @@
 (defn -results-match-single-word? [w-word l-matching-word-seq]
   (= w-word (first (first (filter (complement empty?) l-matching-word-seq)))))
 
-;; evaluate-move takes global mask list, dict-answers, and "passe" to one row of r-evals
+;; evaluate-move takes global mask list, l-answers, and "passe" to one row of r-evals
  ;; ["passe"
   ; {:entropy 0.3333333333333333,
   ;  :matches
@@ -105,7 +90,7 @@
 (defn pred-guess-produces-mask-with-answer [w-guess m-mask w-answer]
   (= m-mask (guess-and-answer-to-mask w-guess w-answer)))
 
-;; sorted list of evaluate-move mapped to each guess in allowed-guesues:
+;; sorted list of evaluate-move mapped to each guess in allowed-guess
 ;; ["aahed"
 ;;  {:entropy 7.78318320736531353,
 ;;   :matches
@@ -118,14 +103,14 @@
      [g {:entropy 0 :matches {}}]) l-allowed-guesses))
 
 
-;; NOTE: dict-answers empty returns all 0, no matches
+;; NOTE: l-answers empty returns all 0, no matches
 ;; Also note - this one won't have keys for masks with no matching answers
-(defn evaluate-move [dict-answers w-guess]
-   (let [matching-words (group-by (partial guess-and-answer-to-mask w-guess) dict-answers)
-         total-words (count dict-answers)
+(defn evaluate-move [l-answers w-guess]
+   (let [matching-words (group-by (partial guess-and-answer-to-mask w-guess) l-answers)
+         total-words (count l-answers)
          n-entropy (cond 
                        (= 0 total-words) 
-                         0 ;; an error state - should not get here unless dict-answers empty
+                         0 ;; an error state - should not get here unless l-answers empty
 
                        ;; NOTE: could probably short-circuit here with just (= 1 total-words)
                        ;; There should only be one bucket (specifically, '(2 2 2 2 2)) 
@@ -225,134 +210,3 @@
      l-new-result-sets
      l-new-answer-lists
      )))
-
-;; SECTION: Harness
-
-(defn harness-generate-random-word [l-answer-dict] 
-    (rand-nth l-answer-dict))
-
-(defn harness-select-best-guess-summed [l-results l-found-words]
-  (first (filter (complement (set l-found-words)) 
-                             (map first (-sum-entropies (map just-words-and-entropy l-results))))))
-
-;; TODO - picks MIN (first) of sorted, still doesn't randomly break ties
-(defn harness-select-best-guess-global-min [l-results l-found-words]
-  (let [r (first (filter (complement (set l-found-words)) 
-       								   (sort (fn [a b] (< (-> a second second) (-> b second second)))  
-                           (reduce concat (map just-words-and-entropy l-results))))) ]
-	  (first r)))
-
-(def harness-initial-game-state 
-  { 
-		  :round 0
-		  :rounds-finished '()
-		  :found-words '()
-		  :guesses '()
-  })
-
-(defn harness-update-game-state [game-state w-guess l-response-masks]
-   (let [new-round (inc (:round game-state))
-         num-finished (count (filter #(= '(2 2 2 2 2) %) l-response-masks))
-         new-found-words (concat (:found-words game-state) (repeat num-finished w-guess))
-         new-rounds-finished (concat (:rounds-finished game-state) (repeat num-finished new-round))
-         new-guesses (concat (:guesses game-state) (list w-guess))] 
-     { 
-	      :round new-round
-	      :rounds-finished new-rounds-finished
-	      :found-words new-found-words
-	      :guesses new-guesses 
-     }))
-
-
-(defn log-results [answers-set game-state]
-  (spit "output.txt" (apply str (interpose "," answers-set)) :append true)
-  (spit "output.txt" ";" :append true)
-  (spit "output.txt" (apply str (interpose "," (:rounds-finished game-state))) :append true)
-  (spit "output.txt" ";" :append true)
-  (spit "output.txt" (apply str (interpose "," (:guesses game-state))) :append true)
-  (spit "output.txt" \newline :append true)
-  (clojure.pprint/pprint "DONE LOGGING"))
-
-
-(defn drop-indices [col indices]
-  (let [s-indices (set indices)]
-    (filter identity (map-indexed #(if ((complement s-indices) %1) %2) col))))
-
-(defn find-indices [col target]
-  (keep-indexed #(when (= %2 target) %1) col))
-;; game state - initial state = :round, :rounds-finished, :found-words, :guesses
-;; remaining-answers-set - initial
-;; l-results: 4x : "soare " -> {:entropy 0, :matches {22010 -> ["dacha" "dairy"}}
-;; fixed guess: (results, gamestate:foundwords) -> Word
-
-;; LOOP:Guess has been made
-;; l-response-masks: R(g,A) over all Answers set) -> 4 x '((0 0 1  0 1)...)
-;; New game state: N(state, g, masks) -> new state
-;; IF ZERO EXIT
-;; l-results: play(Guesses, guess, response-masks, results)
-  ;;; -- play-moves: for each guesss, get nwe answer set for each guess, then eval entropy.
-  ;; if l-repsonse-masks includes a 22222, drop that index from remaining-answers-set, l-results, recur
-(defn harness-run-one-trial [cached-results answers-set l-allowed-guesses f-heuristic]
-    (loop [game-state harness-initial-game-state
-           remaining-answers-set answers-set
-           l-results cached-results
-           w-guess (f-heuristic l-results (:found-words game-state))]
-            (let [
-              l-response-masks (map (partial guess-and-answer-to-mask w-guess) remaining-answers-set)
-              new-game-state (harness-update-game-state game-state w-guess l-response-masks)
-              _ (println "== NEW GAME STATE ==") _ (clojure.pprint/pprint new-game-state)
-              correct-indices (find-indices l-response-masks '(2 2 2 2 2))
-              [l-new-results l-new-answer-lists] (play-moves l-allowed-guesses w-guess l-response-masks l-results)
-              l-results (drop-indices l-new-results correct-indices)
-              l-answer-lists (drop-indices l-new-answer-lists correct-indices)
-              remaining-answers-set (drop-indices remaining-answers-set correct-indices)
-              ]
-              (if (zero? (count remaining-answers-set)) (log-results answers-set new-game-state) ;; termination
-                  (let [w-next-guess (f-heuristic l-results (:found-words new-game-state))]
-                    (recur new-game-state remaining-answers-set l-results w-next-guess))))))
-
-;; SECTION: Cheater tools
-;; -  cutting down initial set if you have other information.
-
-(defn intersect-blocks [a b]
-   (into '()  (clojure.set/intersection (set a) (set b))))
-
-(defn drop-nth-from-seq [n seq-w]
-  (concat
-    (take n seq-w)
-    (drop (inc n) seq-w)))
-
-
-(defn select-from-word [indices w]
-  (let [s (seq w)]
-  (map #(nth s %) indices)))
-
-
-(defn select-similar-block [l-greens min-ct l-answers] 
- (mapcat 
-   second
-   (filter
-     (fn [[k v]] (>= (count v) min-ct))
-       (group-by (partial select-from-word l-greens)
-     dict-answers))))
-
-(defn select-anagrams [l-answers] 
- (mapcat 
-   second
-   (filter
-     (fn [[k v]] (>= (count v) 2))
-       (group-by (comp seq sort)
-                 dict-answers))))
-
-(print "hi")
-
-
-(def l-answers dict-answers)
-(def l-allowed-guesses dict-allowed-guesses)
-
-;; first run takes about 18 minutes with pmap across guesses, 148 minutes without, makes sense among 8 cores. 
-; UPDATE  - takes 47 seconds with the new group-by style
-;(def r-firstmove   (evaluate-all-moves l-answers l-allowed-guesses)) 
-
-
-
