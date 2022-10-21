@@ -17,7 +17,7 @@
   (let [r (first (filter (complement (set l-found-words))
                          (sort (fn [a b] (< (-> a second second) (-> b second second)))
                                (reduce concat (map wordle/just-words-and-entropy l-results)))))]
-	  (first r)))
+   (first r)))
 
 (def harness-initial-game-state 
   {
@@ -35,10 +35,10 @@
                                      (repeat num-finished new-round))
          new-guesses (concat (:guesses game-state) (list w-guess))] 
      { 
-	      :round new-round
-	      :rounds-finished new-rounds-finished
-	      :found-words new-found-words
-	      :guesses new-guesses 
+       :round new-round
+       :rounds-finished new-rounds-finished
+       :found-words new-found-words
+       :guesses new-guesses 
      }))
 
 
@@ -97,6 +97,8 @@
 
 
 ;; Note - can use this as either "run over all answers" (1-dle), or "run over this test set"
+
+;; (harness/harness-run-over-all-in-list data/dict-answers data/dict-allowed-guesses 1 r-firstmove  harness/harness-select-best-guess-summed)
 
 ;; TODO NOTE - vern's gambit
 ;; Example - run over pre-generated answer sets for Octordle
