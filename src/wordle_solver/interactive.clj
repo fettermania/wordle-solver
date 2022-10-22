@@ -9,7 +9,7 @@
 ;; TODO clean: rename core -> evaluate, interactive -> core
 ;; TODO clean: consider destructuring this object in functions
 
-;; Example (initialize-ndle-state 4 harness/harness-select-best-guess-summed)
+;; Example (initialize-ndle-state 4 harness/select-best-guess-summed)
 ;; NOTE: This will evaluate the first move as well.
 
 ;; first run takes about 18 minutes with pmap across guesses,
@@ -26,7 +26,7 @@
    :l-allowed-guesses  data/dict-allowed-guesses
    :r-firstmove r-firstmove
    :l-results (repeat board-size r-firstmove)
-   :game-state harness/harness-initial-game-state
+   :game-state harness/initial-game-state
    :f-heuristic f-heuristic
    })
 
@@ -57,7 +57,7 @@
 
 ;; Example:
 ;; (record-guess-results ndle-state "soare" 
-;;   '(
+;; s  '(
 ;;      (2 0 0 0 2) 
 ;;      (0 0 1 0 1) 
 ;;      (0 0 2 0 0) 
@@ -66,7 +66,7 @@
 
 ;; FIRST TODO - how to separate playing move from examining state?
 (defn record-guess-results [ndle-state w-guess l-response-masks]
-  (let [game-state (harness/harness-update-game-state
+  (let [game-state (harness/update-game-state
                     (:game-state ndle-state)
                     w-guess l-response-masks)
         _ (println "New game state ")
