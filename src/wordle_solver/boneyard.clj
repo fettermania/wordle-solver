@@ -29,15 +29,15 @@
                 (map str yellow-list)))))
 
 (defn _generate-regex-entry [black-list mask-elt word-elt]
-  (cond (= mask-elt core/GREEN) word-elt
-        (= mask-elt core/YELLOW) (apply str "[^" black-list word-elt "]")
+  (cond (= mask-elt eval/GREEN) word-elt
+        (= mask-elt eval/YELLOW) (apply str "[^" black-list word-elt "]")
         :else   (apply str "[^" black-list "]")))
 
 (defn old-filter-fn-from-mask-list-and-word [w-word mask-list]
   (let [seq-word (seq w-word)
-        black-list (core/apply-mask-to-word mask-list seq-word core/BLACK)
-        yellow-list (core/apply-mask-to-word mask-list seq-word  core/YELLOW)
-        green-list (core/apply-mask-to-word mask-list seq-word core/GREEN)
+        black-list (eval/apply-mask-to-word mask-list seq-word eval/BLACK)
+        yellow-list (eval/apply-mask-to-word mask-list seq-word  eval/YELLOW)
+        green-list (eval/apply-mask-to-word mask-list seq-word eval/GREEN)
         regex-str (apply str
                          (map (partial _generate-regex-entry (apply str black-list))
                               mask-list w-word))
@@ -72,14 +72,14 @@
 ; TODO FIX THIS?
 (defn rev-color-seqs-from-word-and-mask [w-word mask-list]
   (loop [word w-word 
-  			    mask mask-list
-  						accum {}]
-  						(if (empty? word)  ;; note: assuming |word| = |mask-list|
-  							accum
-  							(recur 
-  							  	 	(rest word)
- 									 	 	(rest mask)
-	  	 									(update accum (first word) conj (first mask))))))
+         mask mask-list
+        accum {}]
+        (if (empty? word)  ;; note: assuming |word| = |mask-list|
+         accum
+         (recur 
+              (rest word)
+              (rest mask)
+              (update accum (first word) conj (first mask))))))
 
 
 ; (def invalid-mask (rev-color-seqs-from-word-and-mask "dacha" '(0 0 0 0 1)))
@@ -103,15 +103,15 @@
 ; ; false
 (defn rev-seq-contains-black-then-yellow [rev-color-seq]
   (let [rev-color-str (apply str rev-color-seq)
-  					 color-str (apply str (reverse rev-color-seq))
-  					 first-black-ix (.indexOf color-str "0")
-  					 last-yellow-reverse-ix (.indexOf  rev-color-str "1")
-  					 last-yellow-ix (- (dec (count rev-color-seq))
-  					 										last-yellow-reverse-ix)]
-  					(and (not= first-black-ix -1)
-  									 (not= last-yellow-reverse-ix -1)
-  									 (< first-black-ix last-yellow-ix))))
-  								
+        color-str (apply str (reverse rev-color-seq))
+        first-black-ix (.indexOf color-str "0")
+        last-yellow-reverse-ix (.indexOf  rev-color-str "1")
+        last-yellow-ix (- (dec (count rev-color-seq))
+                  last-yellow-reverse-ix)]
+       (and (not= first-black-ix -1)
+            (not= last-yellow-reverse-ix -1)
+            (< first-black-ix last-yellow-ix))))
+          
 ;
 ; (def listy '("abcde" "aahed" "dacha" "hairy"))
 ; (regex-str-from-word-and-mask "dacha" '(1 2 0 0 0)) 
@@ -120,9 +120,9 @@
    (apply str
      (map 
        (fn [w m]
-         (if (= m core/GREEN) w (str "[^" w "]")))
-   		w-word
-   		mask-list)))
+         (if (= m eval/GREEN) w (str "[^" w "]")))
+     w-word
+     mask-list)))
 
 ;; Strategy 2: Create comp'd filter functions
 
@@ -144,8 +144,8 @@
   (partial filter 
     (fn [w] 
      (comp-fn 
-   	  	(count (filter (partial = ch-match) w))
-  		  	ct-expected))))
+       (count (filter (partial = ch-match) w))
+       ct-expected))))
 
 
 
@@ -153,8 +153,8 @@
 ; ((regex-filter-from-word-and-mask "dacha" '(1 2 0 0 0))  listy)
 ;; yields -> ("aahed" "hairy")
 (defn regex-filter-from-word-and-mask  [w-word mask-list]
-		(partial filter
-		  #(re-matches (re-pattern (regex-str-from-word-and-mask w-word mask-list)) %)))
+  (partial filter
+    #(re-matches (re-pattern (regex-str-from-word-and-mask w-word mask-list)) %)))
 
 
 ; (def listy '("abcde" "aahed" "dacha" "hairy"))
@@ -170,32 +170,32 @@
   ;; if it contains a 0, then it's exact count of non-0s
   ;; otherwise its that many non-0s or more
   (let [ct-black (count (filter (partial = 0) rev-color-seq))
-				ct-yg (count (filter (partial not= 0) rev-color-seq))
-				has-black-then-yellow 
-					(rev-seq-contains-black-then-yellow rev-color-seq)]
-  	(if has-black-then-yellow 
-  	    (partial filter (fn [w] false))
-  			(gen-char-count-filter-fn ch ct-yg (if (> ct-black 0) = >=)))))
+    ct-yg (count (filter (partial not= 0) rev-color-seq))
+    has-black-then-yellow 
+     (rev-seq-contains-black-then-yellow rev-color-seq)]
+   (if has-black-then-yellow 
+       (partial filter (fn [w] false))
+     (gen-char-count-filter-fn ch ct-yg (if (> ct-black 0) = >=)))))
 
 
 ; TODO Consider filter on this: (filter (apply every-pred (list number? even?)) '(3 4 5 )) 
 (defn new-filter-fn-from-mask-list-and-word [w-word mask-list]
   (let [regex-filter (regex-filter-from-word-and-mask w-word mask-list)
-  			rev-color-seqs (rev-color-seqs-from-word-and-mask w-word mask-list)
-				char-count-filters (map rev-color-seq-to-filter-fn (keys rev-color-seqs) (vals rev-color-seqs))
-  			ultimate-filter-fn (reduce comp (conj char-count-filters regex-filter))]
-  			ultimate-filter-fn))
+     rev-color-seqs (rev-color-seqs-from-word-and-mask w-word mask-list)
+    char-count-filters (map rev-color-seq-to-filter-fn (keys rev-color-seqs) (vals rev-color-seqs))
+     ultimate-filter-fn (reduce comp (conj char-count-filters regex-filter))]
+     ultimate-filter-fn))
 
 
 ;; Filter strategy 3 (correct, faster) - create comp'd predicate, apply filter once
 (defn gen-char-count-pred [ch-match ct-expected comp-fn]
     (fn [w] 
      (comp-fn 
-   	  	(count (filter (partial = ch-match) w))
-  		  	ct-expected)))
+       (count (filter (partial = ch-match) w))
+       ct-expected)))
 
 (defn regex-pred-from-word-and-mask  [w-word mask-list]
-		  #(re-matches (re-pattern (regex-str-from-word-and-mask w-word mask-list)) %))
+    #(re-matches (re-pattern (regex-str-from-word-and-mask w-word mask-list)) %))
 
 
 (defn rev-color-seq-to-pred [ch rev-color-seq]
@@ -203,19 +203,19 @@
   ;; if it contains a 0, then it's exact count of non-0s
   ;; otherwise its that many non-0s or more
   (let [ct-black (count (filter (partial = 0) rev-color-seq))
-				ct-yg (count (filter (partial not= 0) rev-color-seq))
-				has-black-then-yellow 
-					(rev-seq-contains-black-then-yellow rev-color-seq)]
-  	(if has-black-then-yellow 
-  	    (fn [w] false)
-  			(gen-char-count-pred ch ct-yg (if (> ct-black 0) = >=)))))
+    ct-yg (count (filter (partial not= 0) rev-color-seq))
+    has-black-then-yellow 
+     (rev-seq-contains-black-then-yellow rev-color-seq)]
+   (if has-black-then-yellow 
+       (fn [w] false)
+     (gen-char-count-pred ch ct-yg (if (> ct-black 0) = >=)))))
 
 (defn revised-new-filter-fn-from-mask-list-and-word [w-word mask-list]
   (let [regex-pred (regex-pred-from-word-and-mask w-word mask-list)
-  			rev-color-seqs (rev-color-seqs-from-word-and-mask w-word mask-list)
-				char-count-preds (map rev-color-seq-to-pred (keys rev-color-seqs) (vals rev-color-seqs))
-  			ultimate-filter-fn (partial filter (apply every-pred (concat char-count-preds (list regex-pred))))]
-  			ultimate-filter-fn))
+     rev-color-seqs (rev-color-seqs-from-word-and-mask w-word mask-list)
+    char-count-preds (map rev-color-seq-to-pred (keys rev-color-seqs) (vals rev-color-seqs))
+     ultimate-filter-fn (partial filter (apply every-pred (concat char-count-preds (list regex-pred))))]
+     ultimate-filter-fn))
 
 
 ;; TODO END NEW ZONE
@@ -229,35 +229,35 @@
 ;; NOTE: dict-answers empty returns all 0, no matches
 (defn old-evaluate-move [all-mask-lists dict-answers w-word]
   (let [;_ (println "OLD Evaluate move " w-word) 
-    		matching-words (map
-   										;; TODO - put pmap HERE for speed? ^^^
+      matching-words (map
+             ;; TODO - put pmap HERE for speed? ^^^
                         #((revised-new-filter-fn-from-mask-list-and-word w-word %)
                           dict-answers) all-mask-lists)
         total-words (count dict-answers)
         ; _ (println "entropy numerator OLD")
         ; _ (println  (map calculate-entropy-numerator
-		      ;               matching-words))
+        ;               matching-words))
 
         n-entropy (cond 
-        							(= 0 total-words) 
-        							  0 ;; an error state - should not get here unless dict-answers empty
-        							(and 
-        							  	(= 1 total-words) 
-        								  (core/-results-match-single-word? w-word matching-words))
-      							    -100 ;; NOTE: A match! 
-      							  :else 
-											  (/
-													(apply +
-		               (map core/calculate-entropy-numerator
-		                    matching-words))
-												total-words))]
+               (= 0 total-words) 
+                 0 ;; an error state - should not get here unless dict-answers empty
+               (and 
+                  (= 1 total-words) 
+                  (eval/-results-match-single-word? w-word matching-words))
+                 -100 ;; NOTE: A match! 
+               :else 
+             (/
+             (apply +
+                 (map eval/calculate-entropy-numerator
+                      matching-words))
+            total-words))]
     {:entropy n-entropy
      :matches (zipmap all-mask-lists matching-words)}))
 
 
 
 (defn old-evaluate-all-moves [l-answers l-allowed-guesses]
-  (let [all-mask-lists (core/generate-all-mask-lists 5)
+  (let [all-mask-lists (eval/generate-all-mask-lists 5)
         results (zipmap
                  l-allowed-guesses
                  (pmap (partial old-evaluate-move all-mask-lists l-answers)

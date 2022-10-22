@@ -1,6 +1,6 @@
 (ns wordle-solver.harness)
 
-(require '[wordle-solver.core :as core])
+(require '[wordle-solver.eval :as eval])
 (require '[clojure.pprint])
 
 (defn generate-random-word [l-answer-dict] 
@@ -9,8 +9,8 @@
 ;; Heuristic: Sum Entropy Based (Healy/Fetterman)
 (defn select-best-guess-summed [l-results l-found-words]
   (first (filter (complement (set l-found-words)) 
-                 (map first (core/-sum-entropies
-                             (map core/just-words-and-entropy l-results))))))
+                 (map first (eval/-sum-entropies
+                             (map eval/just-words-and-entropy l-results))))))
 
 ;; Heuristic: Greedy - picks closest word to solve and goes for it.  "Vern's Gambit"
 
@@ -18,7 +18,7 @@
 (defn select-best-guess-global-min [l-results l-found-words]
   (let [r (first (filter (complement (set l-found-words))
                          (sort (fn [a b] (< (-> a second second) (-> b second second)))
-                               (reduce concat (map core/just-words-and-entropy l-results)))))]
+                               (reduce concat (map eval/just-words-and-entropy l-results)))))]
    (first r)))
 
 (def initial-game-state 
@@ -76,7 +76,7 @@
            l-results cached-results
            w-guess (f-heuristic l-results (:found-words game-state))]
             (let [
-                  l-response-masks (map (partial core/guess-and-answer-to-mask w-guess)
+                  l-response-masks (map (partial eval/guess-and-answer-to-mask w-guess)
                                         remaining-answers-set)
 
                   new-game-state (update-game-state game-state w-guess l-response-masks)
@@ -86,7 +86,7 @@
 
                   ;; TODO - avoid sloppy use of 22222 
                   correct-indices (-find-indices l-response-masks '(2 2 2 2 2))
-                  [l-new-results l-new-answer-lists] (core/play-moves
+                  [l-new-results l-new-answer-lists] (eval/play-moves
                                                       l-allowed-guesses
                                                       w-guess l-response-masks l-results)
                   l-results (-drop-indices l-new-results correct-indices)
