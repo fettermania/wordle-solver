@@ -1,4 +1,4 @@
-ns wordle-solver.core)
+(ns wordle-solver.core)
 
 (require '[wordle-solver.eval :as eval])
 (require '[wordle-solver.data :as data])
