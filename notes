@@ -1,22 +1,9 @@
 
-;; Example usage
-(require '[wordle-solver.core :as core])
-(require '[wordle-solver.harness :as harness])
-(require '[wordle-solver.data :as data])
-(require '[clojure.pprint])
 
-(def r-firstmove (core/evaluate-first-move))
+;; TODO move to f-heuristic verbose=true:
 
-(def ndle-state  (core/initialize-ndle-state 4 harness/select-best-guess-summed r-firstmove))
+;; (clojure.pprint/pprint
+;;	(take 10 (eval/-sum-entropies
+;;                  (map eval/just-words-and-entropy
+;;                      (:l-results ndle-state)))))
 
-;; LOOP
-(core/examine-next-move ndle-state)
-
-(def ndle-state
-     (core/record-guess-results ndle-state
-     "forth" ;; update this to your guess
-     '((0 0 0 0 0) ;; update this to the response colors
-       ( 2 2 2 2 2 )
-       (0 0 0 0 0)
-       (0 0 0 0 1))))
-       

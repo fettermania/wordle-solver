@@ -6,20 +6,6 @@
 (defn generate-random-word [l-answer-dict] 
     (rand-nth l-answer-dict))
 
-;; Heuristic: Sum Entropy Based (Healy/Fetterman)
-(defn select-best-guess-summed [l-results l-found-words]
-  (first (filter (complement (set l-found-words)) 
-                 (map first (eval/-sum-entropies
-                             (map eval/just-words-and-entropy l-results))))))
-
-;; Heuristic: Greedy - picks closest word to solve and goes for it.  "Vern's Gambit"
-
-;; TODO - Note: picks MIN (first) of sorted, still doesn't randomly break ties
-(defn select-best-guess-global-min [l-results l-found-words]
-  (let [r (first (filter (complement (set l-found-words))
-                         (sort (fn [a b] (< (-> a second second) (-> b second second)))
-                               (reduce concat (map eval/just-words-and-entropy l-results)))))]
-   (first r)))
 
 (def initial-game-state 
   {
@@ -62,18 +48,23 @@
 (defn -find-indices [col target]
   (keep-indexed #(when (= %2 target) %1) col))
 
-;; EXAMPLE for doing 1-dle:
+;; EXAMPLE for running one 1-dle trial:
 ;; (run-one-trial
-;;	(repeat 1 r-firstmove)
-;;	(repeat 1 answer)
+;;      1
+;;	r-firstmove
+;;	'(answer)
 ;;	data/dict-allowed-guesses
-;;	select-best-guess-global-min
+;;	eval/select-best-guess-global-min
 ;;      "output.txt")
-(defn run-one-trial [cached-results answers-set-oneboard l-allowed-guesses
-                     f-heuristic s-outputfilename]
+(defn run-one-trial [board-size
+                     r-firstmove
+                     answers-set-oneboard
+                     l-allowed-guesses
+                     f-heuristic
+                     s-outputfilename]
     (loop [game-state initial-game-state
            remaining-answers-set answers-set-oneboard
-           l-results cached-results
+           l-results (repeat board-size r-firstmove)
            w-guess (f-heuristic l-results (:found-words game-state))]
             (let [
                   l-response-masks (map (partial eval/guess-and-answer-to-mask w-guess)
@@ -101,43 +92,60 @@
                 (let [w-next-guess (f-heuristic l-results (:found-words new-game-state))]
                   (recur new-game-state remaining-answers-set l-results w-next-guess))))))
 
-
-;; Example - run 10 random 2-dle trials
-;; (run-random-trials
-;;   data/dict-answers data/dict-allowed-guesses 2 r-firstmove
-;;   select-best-guess-global-min 10
-;;   "output.txt")
-
-(defn run-random-trials [l-answers l-allowed-guesses board-size
-                         r-firstmove f-heuristic n s-outputfilename]
-  (dotimes [_ n]
-    (let [answer (repeatedly board-size #(generate-random-word l-answers))
-          _ (println "Answers set")
-          _ (clojure.pprint/pprint answer)]
-      (run-one-trial
-       (repeat board-size r-firstmove)
-       answer
-       l-allowed-guesses
-       f-heuristic
-       s-outputfilename))))
-
-;; Note - can use this as either "run over all answers" (1-dle), or "run over this test set"
-;; TODO NOTE - vern's gambit
-;; Example - run over pre-generated answer sets for Octordle
-;; (run-over-all-in-list
-;;   l-my-octordle-boards data/dict-allowed-guesses 2 r-firstmove
-;;   select-best-guess-summed
-;;      "output.txt")
-(defn run-over-all-in-list [l-answer-set l-allowed-guesses board-size
-                                    r-firstmove f-heuristic s-outputfilename]
+;; Example - run over a list of boards 
+;;      (run-many-trials
+;;      4
+;;	r-firstmove
+;;	'(["spore", "deity", "manga", "snoop"]
+;;           ["radio", "creak", "touch", "burst"])
+;;	data/dict-allowed-guesses
+;;	eval/select-best-guess-global-min
+;;        "output.txt")
+(defn run-many-trials [board-size
+                     r-firstmove
+                     l-answers-set
+                     l-allowed-guesses
+                     f-heuristic
+                       s-outputfilename]
   (map (fn [answer]
          (println "Answers set")
          (clojure.pprint/pprint answer)
          (run-one-trial
-           (repeat board-size r-firstmove)
+          board-size
+          r-firstmove
            answer
            l-allowed-guesses
            f-heuristic
-           s-outputfilename)
-        l-answer-set)))
+           s-outputfilename))
+       l-answers-set))
 
+
+;; Example - run 10 random 2-dle trials
+;;     (harness/run-random-trials
+;;       10
+;;       2
+;;       r-firstmove
+;;       data/dict-answers
+;;       data/dict-allowed-guesses
+;;       eval/select-best-guess-global-min
+;;       "output.txt")
+(defn run-random-trials  [n
+                     board-size
+                     r-firstmove
+                     l-answers-dict     
+                     l-allowed-guesses
+                     f-heuristic
+                     s-outputfilename]
+  
+  (dotimes [_ n]
+    (let [answer (repeatedly board-size #(generate-random-word l-answers-dict))
+          _ (println "Answers set")
+          _ (clojure.pprint/pprint answer)]
+
+         (run-one-trial
+          board-size
+          r-firstmove
+           answer
+           l-allowed-guesses
+           f-heuristic
+           s-outputfilename))))

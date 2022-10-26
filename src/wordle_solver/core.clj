@@ -1,4 +1,4 @@
-(ns wordle-solver.core)
+ns wordle-solver.core)
 
 (require '[wordle-solver.eval :as eval])
 (require '[wordle-solver.data :as data])
@@ -6,29 +6,34 @@
 (require '[clojure.pprint])
 
 ;; TODO out of heap memory running this in nREPL?
-;; TODO clean: rename eval -> evaluate, interactive -> eval
 ;; TODO clean: consider destructuring this object in functions
 
-;; Example (initialize-ndle-state 4 harness/select-best-guess-summed)
+;; Example (initialize-ndle-state 4 eval/select-best-guess-summed  r-firstmove)
 ;; NOTE: This will evaluate the first move as well.
 
 ;; first run takes about 18 minutes with pmap across guesses,
 ;; 148 minutes without, which makes sense among 8 evals. 
 ;; UPDATE  - takes 47 seconds with the new group-by style
 
+;; NOTE: This presumes we're using the built-in
+;; data/dict-answers and data/dict-allowed-guesses.
+;; You can either change these files or call
+;; eval/evaluate-all-moves with custom params.
 (defn evaluate-first-move [] (eval/evaluate-all-moves
                               data/dict-answers
                               data/dict-allowed-guesses))
 
-(defn initialize-ndle-state [board-size f-heuristic r-firstmove]
+(defn initialize-ndle-state [board-size f-heuristic r-firstmove l-answers l-allowed-guesses]
   {
    :l-answers data/dict-answers
-   :l-allowed-guesses  data/dict-allowed-guesses
+   :l-allowed-guesses  l-allowed-guesses
    :r-firstmove r-firstmove
    :l-results (repeat board-size r-firstmove)
+   :l-answer-lists (repeat board-size l-answers)
    :game-state harness/initial-game-state
    :f-heuristic f-heuristic
    })
+
 
 ;; Example (examine-next-move ndle-state)
 ;;   prints =>
@@ -44,27 +49,24 @@
 ;;     ["trace" 21.370493398777437])
 ;;    STOP. Play move  soare
 ;;   returns => "soare"
+
+;; TODO Consider verbose flag for f-heuristic
 (defn examine-next-move [ndle-state]
-  (clojure.pprint/pprint (take 10 (eval/-sum-entropies
-                    (map eval/just-words-and-entropy
-                         (:l-results ndle-state)))))
+
   (let [w-guess ((:f-heuristic ndle-state)
                  (:l-results ndle-state)
                  (:found-words (:l-results ndle-state)))]
-    
-    (println "STOP. Play move " w-guess)
-    w-guess))
+    {
+     :best-guess w-guess
+     :l-answer-lists (:l-answer-lists ndle-state)
+    }))
 
 ;; Example:
-;; (record-guess-results ndle-state "soare" 
-;; s  '(
-;;      (2 0 0 0 2) 
-;;      (0 0 1 0 1) 
-;;      (0 0 2 0 0) 
-;;      (0 0 1 0 2) 
-;;    ))
+;; (record-guess-results ndle-state "soAre
 
-;; FIRST TODO - how to separate playing move from examining state?
+;; First TODO - how to separate playing move from examining state?
+
+
 (defn record-guess-results [ndle-state w-guess l-response-masks]
   (let [game-state (harness/update-game-state
                     (:game-state ndle-state)
@@ -77,17 +79,9 @@
                       l-response-masks
                       (:l-results ndle-state))
         l-results (first move-results)
-        l-answer-lists (second move-results)
+        l-answer-lists (second move-results)]
 
-        ;; Prints the best next choice for each board
-         _ (println "Best move for each board")
-        _ (clojure.pprint/pprint  (map list (map first l-results)
-                                       l-answer-lists))
-
-        - (println "Best 10 moves overall")
-        _ (clojure.pprint/pprint (take 10 (eval/-sum-entropies
-                            (map eval/just-words-and-entropy
-                                 l-results))))]
         (assoc ndle-state 
                :l-results l-results
+               :l-answer-lists l-answer-lists 
                :game-state game-state)))
