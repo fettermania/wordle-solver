@@ -2,6 +2,7 @@
   (:gen-class))
 
 (require '[wordle-solver.core :as core])
+(require '[wordle-solver.eval :as eval])
 (require '[clojure.string :as str])
 (require '[clojure.set])
 

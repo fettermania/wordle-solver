@@ -37,18 +37,9 @@
 
 ;; Example (examine-next-move ndle-state)
 ;;   prints =>
-;;    (["soare" 21.151398853925446]
-;;     ["roate" 21.152784576168425]
-;;     ["raise" 21.178998005123777]
-;;     ["reast" 21.221257747722216]
-;;     ["raile" 21.231594514931395]
-;;     ["slate" 21.268932854658406]
-;;     ["salet" 21.348118702726552]
-;;     ["crate" 21.351345900563334]
-;;     ["irate" 21.36101430733284]
-;;     ["trace" 21.370493398777437])
-;;    STOP. Play move  soare
-;;   returns => "soare"
+;; {:best-guess "guilt",
+;;  :l-answer-lists (["belie" "belle" "bible" ... ]
+;;                   [ ... ])}
 
 ;; TODO Consider verbose flag for f-heuristic
 (defn examine-next-move [ndle-state]
@@ -62,7 +53,6 @@
     }))
 
 ;; Example:
-;; (record-guess-results ndle-state "soAre
 
 ;; First TODO - how to separate playing move from examining state?
 
