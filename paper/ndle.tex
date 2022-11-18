@@ -31,7 +31,7 @@ style=alphabetic,
 \title{Solving N-dle using Information Entropy}
 \author{Dave Fetterman}
 \affil{Obviously Unemployed}
-\date{6/19/22}
+\date{6/19/22, Updated: 11/1/22}
 \begin{document}
 \maketitle
 
@@ -71,9 +71,10 @@ If the solution has five unique letters, the above rules are straightforward to 
 \begin{itemize}
 \item The number of green and yellow squares returned for some letter, say A, don't exceed the number of instances of the letter A in the solution. (rule 1)
 \item All yellow squares for some letter, say B, appear before all black squares for B. (rule 2) 
-\item As an example, if the answer is PASSE, and the guess is ASSES, the unique response will be YYGYB, not YYGYY (violates rule 1) or YBGYY (violates rule 2).
 \end{itemize}
  
+ As an example, if the answer is PASSE, and the guess is ASSES, the unique response will be YYGYB, not YYGYY (violates rule 1) or YBGYY (violates rule 2).
+
 
 Starting with a fixed dictionary \footnote{Assumed here to be the 2309 words in \url{https://github.com/fettermania/wordle-solver/blob/main/wordle-answers.txt}}, the player has six guesses from an allowed guess list \footnote{The 12947 words in \url{https://github.com/fettermania/wordle-solver/blob/main/wordle-allowed-guesses.txt}} to enter the hidden answer word (that is, receive all greens as a response). Again, this is very similar to Mastermind \footnote{Note that "hard mode" Wordle, which has additional restrictions, is not treated here.}.
 

@@ -200,7 +200,7 @@ You can combine several word lists (sequneces of word strings) with
 - vern's gambit
 - pmap
 - Clojure 1.8?  Should update?
-- sometimes overruns nREPL memory limits
+X sometimes overruns nREPL memory limits
  
 ### Fragility to errors
 

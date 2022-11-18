@@ -74,7 +74,7 @@
 
   (def ndle-state  (core/initialize-ndle-state
           4 ;; number of simultaneous boards.  Here, 4 for "quordle"
-          eval/select-best-guess-summed ;; heuristic for next guess.
+          #(eval/select-best-guess-summed %1 %2 true) ;; heuristic for next guess.
           r-firstmove ;; cached evaluation of a "blank" single board
           data/dict-answers ;; legal answers.  Can be customized.
           data/dict-allowed-guesses)) ;; legal guesses (contains the answers).  Can be customized.
@@ -135,9 +135,11 @@
   (harness/run-one-trial
       4
       r-firstmove
-      ["spore", "deity", "manga", "snoop"]
+;      ["lymph" "cover" "sassy" "foist"]
+      ["amiss" "hefty" "fiber" "field"]
       data/dict-allowed-guesses
-      eval/select-best-guess-global-min
+     #(eval/select-best-guess-summed %1 %2 true)
+;      #(eval/select-best-guess-global-min %1 %2 true)
       "output.txt")
 
   ;;  Random trials

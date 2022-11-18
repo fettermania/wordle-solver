@@ -4,7 +4,7 @@
 
 (require '[wordle-solver.data :as data])
 (require '[clojure.string :as str])
-(require '[clojure.pprint])
+(require '[clojure.pprint :refer [pprint]])
 
 
 ;; MASKS
@@ -220,19 +220,42 @@
      )))
 
 ;; Heuristic: Sum Entropy Based (Healy/Fetterman)
-(defn select-best-guess-summed [l-results l-found-words]
-  (first (filter (complement (set l-found-words)) 
-                 (map first (-sum-entropies
-                             (map just-words-and-entropy l-results))))))
+(defn select-best-guess-summed [l-results l-found-words & [verbose?]]
+  (when verbose?
+    (println ">> select-best-guess-summed input:")
+    (pprint (take 10 (map just-words-and-entropy l-results))))
+  
+  (let [s (-sum-entropies
+                      (map just-words-and-entropy l-results))
+        
+
+       r (filter (complement (set l-found-words)) 
+                          (map first s))]
+    (when verbose?
+      (println "<< select-best-guess-summed top results:")
+      (pprint (take 10 s))
+      (println "=="))
+
+    (first r)))
 
 ;; Heuristic: Greedy - picks closest word to solve and goes for it.  "Vern's Gambit"
 
 ;; TODO - Note: picks MIN (first) of sorted, still doesn't randomly break ties
-(defn select-best-guess-global-min [l-results l-found-words]
-  (let [r (first (filter (complement (set l-found-words))
+(defn select-best-guess-global-min [l-results l-found-words & [verbose?]]
+  (when verbose?
+    (println ">> select-best-guess-global-min input:")
+    (pprint (take 10 (map just-words-and-entropy l-results))))
+  (let [r (filter (complement (set l-found-words))
                          (sort (fn [a b] (< (-> a second second)
                                             (-> b second second)))
                                (reduce concat
                                        (map just-words-and-entropy
-                                            l-results)))))]
-   (first r)))
+                                            l-results))))]
+    (when verbose?
+      (println "<< select-best-guess-global-min top results:")
+      (pprint (take 10 r))
+      (println "=="))
+    
+   (first (first r))))
+
+
