@@ -31,7 +31,7 @@ style=alphabetic,
 \title{Solving N-dle using Information Entropy}
 \author{Dave Fetterman}
 \affil{Obviously Unemployed}
-\date{6/19/22, Updated: 11/1/22}
+\date{6/19/22, Updated: 12/12/22}
 \begin{document}
 \maketitle
 
@@ -668,7 +668,7 @@ guesses & count & proportion \\
 
 
 \begin{itemize}
-\item Expected Guess Count: 10.9403 (vs. sum strategy: 11.5144)
+\item Expected Guess Count: 11.5144 (vs. sum strategy: 10.9403)
 \item Opener 1: \emph{soare, lemel} (.0602)
 \item Opener 2: \emph{soare, tichy} (.0284)
 \item Opener 3: \emph{soare, butch} (.0217)
@@ -693,7 +693,7 @@ Many questions remain for me. Given the volume of armchair math written about Wo
 \begin{itemize}
 \item Other than relative monotonicity, what is the link between the measure of entropy and expected moves remaining? Given that the ``branching factor'' changes so much through the search space, it does not seem so simple as, say, doing a binary search with a coin.
 \item Mastermind, whose guess-and-answer mechanic Wordle adopted, is an entirely ``smooth'' space: every guess is legal, and every combination of ``letters'' (colors in Mastermind's case) is possible (and equally so). Would this kind of result fall out of Mastermind? Donald Knuth built a minimax-based (search) algorithm to solve Mastermind, detailed here \cite{5}. The answer to this question indicates whether our results say more about the algorithm or the dictionary.
-\item There are certainly other algorithms to solve n-dle. Healy \cite{1} mentioned looking two moves ahead and estimating the conditional entropy there (computationally expensive), as well as limiting guesses to only possible answers, both of which can perform better.
+\item There are certainly other algorithms to solve n-dle. Healy \cite{1} mentioned looking two moves ahead and estimating the conditional entropy there (computationally expensive), as well as limiting guesses to only (or favoring guesses which are) possible answers, both of which can perform better.
 \end{itemize}
 
 \begin{thebibliography}{9}
