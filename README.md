@@ -191,17 +191,6 @@ You can combine several word lists (sequneces of word strings) with
 
 ## Enchancements (TODOs)
 
-### Notes for presenation
-
-- lemel and sorting
-- -100 entropy
-- what to do with finished sub-puzzles
-- tiebreaking
-- vern's gambit
-- pmap
-- Clojure 1.8?  Should update?
-X sometimes overruns nREPL memory limits
- 
 ### Fragility to errors
 
 If something's entered incorrectly, you will end up in the "I don't know, lemel" case quickly.

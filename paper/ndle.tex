@@ -573,7 +573,7 @@ A few observations on this data:
 \begin{itemize}
 \item The max puzzle solution length has increased from 7 (N+5) to 8 (N+6). However, this is one sample out of 10000.  It's as likely that the sample has omitted an 8-length puzzle for the sum method.
 \item While the distribution of best openers still exhibits high skew (Fig 9b) with ``soare, clint'' as the headliner, the graph has a gentler slope. The min algorithm chooses the second move based on the best sub-puzzle it sees (higher variance) rather than the sum of the N (2) sub-puzzles.  In this method, the ``top four'', while an artificial concept in the sum method, sees no such drop thereafter.
-\item On any given puzzle, the likelihood that the min method solves 2-dle in fewer moves is about 34\% (Fig 10a). A puzzle marked ``1'' here means the min method would solve in, say, 6, while sum solved in 5.  Ties accounted for 58\%. 
+\item On any given puzzle, the likelihood that the min method solves 2-dle in more moves is about 34\% (Fig 10a). A puzzle marked ``1'' here means the min method would solve in, say, 6, while sum solved in 5.  Ties accounted for 58\%. 
 \item As a sanity check, the min method did find its \emph{first} sub-puzzle solution (only) slightly faster, as illustrated in Fib 10b. While the algorithms tied in this metric 73\% of the time, the min method solved the first sub-board 15\% of the time, as opposed to the sum method's 12\%.
 \end{itemize}
 
@@ -588,7 +588,7 @@ A few observations on this data:
 guesses & count & proportion \\
  \hline
 5 & 5	 & 0.0005 \\
-6 & 633	0.0633 \\
+6 & 633& 0.0633 \\
 7 & 3520 & 0.352 \\ 
 8 & 4246 & 0.4246 \\ 
 9 & 1466 & 0.1466 \\ 
